@@ -1,34 +1,50 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" fill="none">
 <defs>
- <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8fbff"/><stop offset="1" stop-color="#e8f0fb"/></linearGradient>
- <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d9e6f4" stop-opacity=".58"/><stop offset="1" stop-color="#a9c2dd" stop-opacity=".22"/></linearGradient>
- <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff" stop-opacity=".78"/><stop offset="1" stop-color="#cbd9e8" stop-opacity=".48"/></linearGradient>
+ <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#dce9f6"/><stop offset=".52" stop-color="#edf3fa"/><stop offset="1" stop-color="#cbdced"/></linearGradient>
+ <linearGradient id="towerA" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f9fcff" stop-opacity=".92"/><stop offset=".48" stop-color="#b8cfe4" stop-opacity=".76"/><stop offset="1" stop-color="#8eabc8" stop-opacity=".58"/></linearGradient>
+ <linearGradient id="towerB" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#dbe8f5" stop-opacity=".9"/><stop offset=".5" stop-color="#fff" stop-opacity=".72"/><stop offset="1" stop-color="#9eb9d4" stop-opacity=".7"/></linearGradient>
+ <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#7fa6ca" stop-opacity=".52"/><stop offset="1" stop-color="#dce9f5" stop-opacity=".28"/></linearGradient>
+ <pattern id="windows" width="48" height="54" patternUnits="userSpaceOnUse"><path d="M5 5V48M24 5V48M43 5V48" stroke="#7898b8" stroke-opacity=".34" stroke-width="2"/><path d="M0 52H48" stroke="#fff" stroke-opacity=".7" stroke-width="3"/></pattern>
 </defs>
 <rect width="1600" height="900" fill="url(#sky)"/>
-<circle cx="1260" cy="180" r="260" fill="#fff" opacity=".36"/>
-<path d="M0 670 240 610 420 650 610 585 820 650 1040 570 1260 630 1450 565 1600 600V900H0Z" fill="#dbe6f2" opacity=".32"/>
-<!-- distant landscaping -->
-<path d="M0 740Q230 680 440 730T900 710T1600 700V900H0Z" fill="#cbd9e8" opacity=".22"/>
-<!-- modern luxury residence -->
-<path d="M660 405 1080 230 1510 370V760H660Z" fill="url(#stone)" stroke="#9eb4cc" stroke-opacity=".42" stroke-width="3"/>
-<path d="M600 420 1080 205 1540 355 1510 390 1080 265 635 455Z" fill="#fff" fill-opacity=".78" stroke="#9eb4cc" stroke-opacity=".4" stroke-width="3"/>
-<path d="M720 450 1080 300 1450 420V710H720Z" fill="url(#glass)" stroke="#91abc6" stroke-opacity=".5" stroke-width="3"/>
-<path d="M720 565H1450M720 690H1450M900 375V710M1080 300V710M1260 360V710" stroke="#8ca7c4" stroke-opacity=".36" stroke-width="3"/>
-<path d="M680 575 1480 575M680 715 1480 715" stroke="#fff" stroke-opacity=".85" stroke-width="9"/>
-<!-- left wing -->
-<path d="M350 520 690 400 930 475V750H350Z" fill="#edf3f9" fill-opacity=".65" stroke="#9eb4cc" stroke-opacity=".38" stroke-width="3"/>
-<path d="M320 525 690 385 955 470 930 490 690 425 350 555Z" fill="#fff" fill-opacity=".76" stroke="#9eb4cc" stroke-opacity=".35" stroke-width="3"/>
-<path d="M390 565 690 455 890 515V720H390Z" fill="url(#glass)" stroke="#91abc6" stroke-opacity=".38" stroke-width="3"/>
-<path d="M390 635H890M555 505V720M720 470V720" stroke="#8ca7c4" stroke-opacity=".3" stroke-width="3"/>
-<!-- terraces and pool -->
-<path d="M260 760H1530L1600 815H180Z" fill="#fff" fill-opacity=".58" stroke="#9eb4cc" stroke-opacity=".35" stroke-width="3"/>
-<path d="M180 820Q650 785 1050 830T1600 820V900H180Z" fill="#c2d6ea" fill-opacity=".38"/>
-<path d="M240 840Q600 815 930 850T1580 845" stroke="#fff" stroke-opacity=".8" stroke-width="4"/>
-<!-- trees as very faint architectural landscape -->
-<g stroke="#8da8c2" stroke-opacity=".26" stroke-width="5" fill="none">
- <path d="M250 750V520m0 30-75-65m75 95 78-75m-78 120-92-50m92 70 100-50"/>
- <path d="M1520 700V450m0 40-82-80m82 115 74-75m-74 120-90-55m90 75 90-50"/>
+<circle cx="1280" cy="150" r="235" fill="#fff" opacity=".32"/>
+<path d="M0 690 230 635 450 670 700 610 930 665 1170 600 1390 650 1600 600V900H0Z" fill="#b9cde1" opacity=".28"/>
+<!-- distant skyline -->
+<g fill="#b6c9dc" opacity=".36">
+ <path d="M0 475 115 450V720H0ZM130 520 245 485V730H130ZM265 430 345 410V720H265ZM1270 470 1380 440V710H1270ZM1390 510 1500 480V720H1390ZM1510 450 1600 420V720H1510Z"/>
 </g>
-<g fill="#b8cadc" opacity=".18"><ellipse cx="250" cy="490" rx="130" ry="52"/><ellipse cx="1520" cy="430" rx="135" ry="55"/></g>
-<rect width="1600" height="900" fill="#fff" opacity=".18"/>
+<!-- left glass residential tower -->
+<path d="M170 250 490 155 650 205V735H170Z" fill="url(#towerB)" stroke="#829fbd" stroke-opacity=".42" stroke-width="3"/>
+<path d="M170 250 490 155 650 205V735H170Z" fill="url(#windows)" opacity=".78"/>
+<path d="M490 155V735M170 340H650M170 435H650M170 530H650M170 625H650" stroke="#fff" stroke-opacity=".72" stroke-width="5"/>
+<path d="M145 255 490 140 675 198 650 220 490 180 170 275Z" fill="#fff" fill-opacity=".82"/>
+<!-- central signature tower -->
+<path d="M565 90 925 25 1120 85V770H565Z" fill="url(#towerA)" stroke="#7e9dbb" stroke-opacity=".48" stroke-width="3"/>
+<path d="M565 90 925 25 1120 85V770H565Z" fill="url(#windows)" opacity=".72"/>
+<path d="M925 25V770M565 190H1120M565 295H1120M565 400H1120M565 505H1120M565 610H1120M565 715H1120" stroke="#fff" stroke-opacity=".75" stroke-width="5"/>
+<path d="M545 96 925 0 1145 70 1120 95 925 55 565 125Z" fill="#fff" fill-opacity=".88"/>
+<!-- right tower with stepped balconies -->
+<path d="M1080 245 1325 170 1510 230V735H1080Z" fill="url(#towerB)" stroke="#829fbd" stroke-opacity=".44" stroke-width="3"/>
+<path d="M1080 245 1325 170 1510 230V735H1080Z" fill="url(#windows)" opacity=".7"/>
+<path d="M1080 335H1510M1080 430H1510M1080 525H1510M1080 620H1510" stroke="#fff" stroke-opacity=".74" stroke-width="5"/>
+<path d="M1060 250 1325 150 1535 215 1510 245 1325 195 1080 275Z" fill="#fff" fill-opacity=".84"/>
+<!-- projecting balcony ribbons -->
+<g stroke="#fff" stroke-opacity=".78" stroke-width="9">
+ <path d="M580 285 1125 285M580 495 1125 495M580 705 1125 705"/>
+ <path d="M180 390 655 390M180 585 655 585M1090 380 1520 380M1090 570 1520 570"/>
+</g>
+<g stroke="#7899b9" stroke-opacity=".34" stroke-width="3">
+ <path d="M600 305H1105M600 515H1105M600 725H1105M200 410H635M200 605H635M1110 400H1500M1110 590H1500"/>
+</g>
+<!-- landscaped podium and reflecting pool -->
+<path d="M80 735H1540L1600 800H0Z" fill="#f8fbff" fill-opacity=".62" stroke="#8daac7" stroke-opacity=".28" stroke-width="3"/>
+<path d="M0 805Q300 770 610 812T1200 808T1600 790V900H0Z" fill="#9ebbd8" fill-opacity=".32"/>
+<path d="M80 835Q400 795 760 840T1510 825" stroke="#fff" stroke-opacity=".8" stroke-width="5"/>
+<!-- subtle trees -->
+<g stroke="#7999b8" stroke-opacity=".25" stroke-width="6" fill="none">
+ <path d="M95 760V600m0 40-55-55m55 85 58-60m-58 95-66-38m66 60 72-48"/>
+ <path d="M1540 750V575m0 45-62-58m62 88 58-62m-58 100-70-42"/>
+</g>
+<g fill="#9fb8d1" opacity=".2"><ellipse cx="95" cy="585" rx="88" ry="38"/><ellipse cx="1540" cy="560" rx="92" ry="42"/></g>
+<rect width="1600" height="900" fill="#fff" opacity=".12"/>
 </svg>
