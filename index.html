@@ -88,6 +88,42 @@ main{grid-template-columns:minmax(0,1fr) 390px;align-content:start;row-gap:18px}
 @media(max-width:650px){.results{grid-template-columns:1fr}.results-heading{align-items:flex-start;flex-direction:column}.demo-note{white-space:normal}}
 
 
+/* Glass surfaces — progressive enhancement with solid fallback */
+.card,
+.metric,
+.search-card,
+.agent{
+  background:rgba(255,255,255,.56) !important;
+  border:1px solid rgba(255,255,255,.76) !important;
+  box-shadow:
+    0 10px 30px rgba(24,48,78,.075),
+    inset 0 1px 0 rgba(255,255,255,.82) !important;
+  -webkit-backdrop-filter:blur(16px) saturate(145%);
+  backdrop-filter:blur(16px) saturate(145%);
+}
+.card{background-color:rgba(255,255,255,.58) !important}
+.metric{background-color:rgba(255,255,255,.62) !important}
+.search-card{background-color:rgba(255,255,255,.70) !important}
+.agent{background-color:rgba(255,255,255,.68) !important}
+.ring{
+  background:linear-gradient(145deg,rgba(255,255,255,.70),rgba(210,229,250,.48),rgba(190,204,237,.46)) !important;
+  border:1px solid rgba(255,255,255,.65);
+  -webkit-backdrop-filter:blur(12px) saturate(140%);
+  backdrop-filter:blur(12px) saturate(140%);
+}
+.field input,.field select{
+  background:rgba(255,255,255,.72);
+  border-color:rgba(1,33,105,.13);
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .card,.metric,.search-card,.agent{background:rgba(255,255,255,.92) !important}
+}
+@media(prefers-reduced-transparency:reduce){
+  .card,.metric,.search-card,.agent,.ring{backdrop-filter:none;-webkit-backdrop-filter:none}
+  .card{background:rgba(255,255,255,.94) !important}
+  .metric,.search-card,.agent{background:rgba(255,255,255,.96) !important}
+}
+
 /* Luxury building wallpaper — visible behind transparent dashboard workspace */
 .shell{
   background-color:#edf2f8;
