@@ -64,6 +64,29 @@ main{grid-template-columns:minmax(0,1fr) 390px;align-content:start;row-gap:18px}
  .building{height:245px}
 }
 
+
+/* Search result preview cards */
+.results{grid-column:1/-1;display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px;padding-top:16px;border-top:1px solid #ededf0}
+.results-heading{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:1px}
+.results-heading strong{display:block;font-size:14px;font-weight:650;color:#161619}
+.results-heading small{display:block;font-size:11px;color:#8a8b91;margin-top:4px}
+.demo-note{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:99px;background:#f3edff;color:#715aa8;font-size:9px;font-weight:700;letter-spacing:.35px;white-space:nowrap}
+.demo-note:before{content:"";width:6px;height:6px;border-radius:50%;background:#9f86e8}
+.agent{background:linear-gradient(145deg,#fff 0%,#fbfbfd 100%);border:1px solid #e9e8ed;border-radius:10px;padding:15px;min-width:0;box-shadow:0 3px 12px rgba(25,25,35,.025)}
+.agent-top{display:flex;align-items:center;gap:10px;margin-bottom:13px}
+.agent-avatar{width:38px;height:38px;flex:0 0 38px;border-radius:9px;background:#eee8ff;color:#6e58a4;display:grid;place-items:center;font-size:12px;font-weight:750}
+.agent-name{font-size:14px;font-weight:650;color:#17171a;line-height:1.2}
+.agent-company{font-size:11px;color:#85858d;margin-top:4px}
+.agent-detail{display:grid;gap:7px;padding-top:11px;border-top:1px solid #f0eff2}
+.agent-line{display:flex;align-items:flex-start;gap:7px;color:#777880;font-size:11px;line-height:1.35}
+.agent-line b{font-weight:600;color:#42434a}
+.agent-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:13px}
+.tag{display:inline-flex;align-items:center;margin:0;padding:5px 8px;border-radius:99px;background:#f0eaff;color:#69539b;font-size:9px;font-weight:650}
+.agent-match{font-size:9px;color:#85858d;white-space:nowrap}
+.results .empty{grid-column:1/-1;color:#777;text-align:center;padding:15px;border-radius:8px;background:#fafafd;font-size:12px}
+@media(max-width:1000px){.results{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.results{grid-template-columns:1fr}.results-heading{align-items:flex-start;flex-direction:column}.demo-note{white-space:normal}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -108,20 +131,75 @@ const SUPABASE_URL='https://pfuomojvcuwbvqtzvglb.supabase.co';
 const SUPABASE_KEY='sb_publishable__W9mPIcJIZ7QDhzbKWNm_g_IsEMgMUt';
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function agentInitials(name){
+ return String(name||'Agent').trim().split(/\\s+/).slice(0,2).map(part=>part.charAt(0)).join('').toUpperCase();
+}
+function showAgentResults(rows, context, isPreview){
+ const r=document.getElementById('results');
+ const heading='<div class="results-heading"><div><strong>'+ (isPreview?'Search result preview':'Agent directory results') +'</strong><small>Client: '+esc(context.client)+' &nbsp;·&nbsp; Target: '+esc(context.target)+'</small></div><span class="demo-note">'+(isPreview?'MOCKUP · SAMPLE PROFILES':'DEMO DATA · NOT VERIFIED')+'</span></div>';
+ const cards=rows.map((a,index)=>{
+  const area=isPreview?context.target:(a.service_area||[a.city,a.state].filter(Boolean).join(', ')||context.target);
+  const brokerage=a.brokerage||'Sample Realty Group';
+  const specialty=a.specialty||'Residential real estate';
+  const initials=agentInitials(a.name);
+  const contact=isPreview?'Illustrative profile only':(a.email||a.phone||'Contact details not provided');
+  return '<article class="agent">'+
+   '<div class="agent-top"><div class="agent-avatar">'+esc(initials)+'</div><div><div class="agent-name">'+esc(a.name)+'</div><div class="agent-company">'+esc(brokerage)+'</div></div></div>'+
+   '<div class="agent-detail">'+
+    '<div class="agent-line"><span>⌖</span><span><b>Service area</b><br>'+esc(area)+'</span></div>'+
+    '<div class="agent-line"><span>✧</span><span><b>Specialty</b><br>'+esc(specialty)+'</span></div>'+
+    '<div class="agent-line"><span>✉</span><span><b>Contact</b><br>'+esc(contact)+'</span></div>'+
+   '</div>'+
+   '<div class="agent-footer"><span class="tag">'+(isPreview?'Sample result':'Demo profile')+'</span><span class="agent-match">Profile '+String(index+1).padStart(2,'0')+'</span></div>'+
+  '</article>';
+ }).join('');
+ r.innerHTML=heading+cards;
+ r.style.display='grid';
+}
+function mockProfiles(){
+ return [
+  {name:'Avery Morgan',brokerage:'Crescent Realty',specialty:'Luxury residential · Buyer representation'},
+  {name:'Jordan Ellis',brokerage:'Pacific Property Group',specialty:'Relocation · Residential buyers'},
+  {name:'Taylor Brooks',brokerage:'Summit Homes',specialty:'Residential sales · Local market guidance'}
+ ];
+}
 async function findAgents(){
  const client=document.getElementById('client').value.trim();
  const location=document.getElementById('location').value.trim();
  const zip=document.getElementById('zip').value.trim();
  const r=document.getElementById('results');
- if(!client || (!location && !zip)){r.style.display='grid';r.innerHTML='<div class="empty">Enter a client name and a target location or ZIP to search the agent directory.</div>';return}
- r.style.display='grid';r.innerHTML='<div class="empty">Searching Supabase agent directory…</div>';
- let q=db.from('real_estate_agents').select('name,brokerage,email,phone,service_area,city,state,zip_codes,specialty').eq('active',true).limit(12);
- if(zip) q=q.contains('zip_codes',[zip]);
- else if(location) q=q.or('city.ilike.%'+location+'%,state.ilike.%'+location+'%,service_area.ilike.%'+location+'%');
- const {data,error}=await q;
- if(error){r.innerHTML='<div class="empty">Unable to search the agent directory.</div>';console.error(error);return}
- if(!data?.length){r.innerHTML='<div class="empty">No agents found for '+esc(location||('ZIP '+zip))+'.</div>';return}
- r.innerHTML=data.map(a=>'<div class="agent"><strong>'+esc(a.name)+'</strong><span>'+esc(a.brokerage)+'</span><span>'+esc(a.specialty||'Residential')+' · '+esc(a.service_area||((a.city||'')+', '+(a.state||'')))+'</span><span>'+esc(a.phone||'')+(a.email?' · '+esc(a.email):'')+'</span><span class="tag">Matches territory'+(zip?' · ZIP '+esc(zip):'')+'</span></div>').join('');
+ const button=document.querySelector('.search-card .button');
+ if(!client || (!location && !zip)){
+  r.style.display='grid';
+  r.innerHTML='<div class="empty">Enter a client name and a target location or ZIP to preview matching agent results.</div>';
+  return;
+ }
+ const target=location||( 'ZIP '+zip );
+ r.style.display='grid';
+ r.innerHTML='<div class="empty">Searching agent directory and preparing the result preview…</div>';
+ if(button){button.disabled=true;button.textContent='Searching…';}
+ try{
+  let q=db.from('real_estate_agents').select('name,brokerage,email,phone,service_area,city,state,zip_codes,specialty').eq('active',true).limit(12);
+  if(zip){q=q.contains('zip_codes',[zip]);}
+  else{
+   const safeLocation=location.replace(/[^a-zA-Z0-9\\s'-]/g,' ').trim().replace(/\\s+/g,' ');
+   if(!safeLocation) throw new Error('Enter a valid target location.');
+   q=q.or('city.ilike.%'+safeLocation+'%,state.ilike.%'+safeLocation+'%,service_area.ilike.%'+safeLocation+'%');
+  }
+  const {data,error}=await q;
+  if(error) throw error;
+  if(data&&data.length){
+   showAgentResults(data.slice(0,6),{client,target},false);
+  }else{
+   showAgentResults(mockProfiles(),{client,target},true);
+  }
+ }catch(error){
+  console.error('Agent directory search:',error);
+  showAgentResults(mockProfiles(),{client,target},true);
+  const note=document.querySelector('.results-heading small');
+  if(note) note.textContent+=' · Preview shown because live directory search was unavailable';
+ }
+ if(button){button.disabled=false;button.textContent='Find Agents';}
 }
 </script>
 </body>
