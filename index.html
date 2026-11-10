@@ -88,17 +88,33 @@ main{grid-template-columns:minmax(0,1fr) 390px;align-content:start;row-gap:18px}
 @media(max-width:650px){.results{grid-template-columns:1fr}.results-heading{align-items:flex-start;flex-direction:column}.demo-note{white-space:normal}}
 
 
-/* Subtle luxury architecture wallpaper */
+/* Luxury building wallpaper — visible behind transparent dashboard workspace */
 .shell{
- background-color:#f7f8fa;
- background-image:
-  linear-gradient(rgba(247,248,250,.78),rgba(247,248,250,.78)),
-  url('/luxury-building-wallpaper.svg');
- background-size:cover;
- background-position:center center;
- background-attachment:fixed;
+  background-color:#edf2f8;
+  background-image:
+    linear-gradient(rgba(245,248,252,.38),rgba(245,248,252,.38)),
+    url('/luxury-building-wallpaper.svg');
+  background-repeat:no-repeat;
+  background-size:cover;
+  background-position:center center;
+  background-attachment:fixed;
 }
-\n</style>
+main{
+  background:transparent !important;
+  background-color:transparent !important;
+}
+.building{
+  background:transparent !important;
+  background-color:transparent !important;
+}
+.building:before{
+  opacity:.16 !important;
+}
+@media(max-width:650px){
+  .shell{background-attachment:scroll;background-position:58% center}
+}
+</style>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
