@@ -132,7 +132,7 @@ const SUPABASE_KEY='sb_publishable__W9mPIcJIZ7QDhzbKWNm_g_IsEMgMUt';
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function agentInitials(name){
- return String(name||'Agent').trim().split(/\\s+/).slice(0,2).map(part=>part.charAt(0)).join('').toUpperCase();
+ return String(name||'Agent').trim().split(/\s+/).slice(0,2).map(part=>part.charAt(0)).join('').toUpperCase();
 }
 function showAgentResults(rows, context, isPreview){
  const r=document.getElementById('results');
@@ -182,7 +182,7 @@ async function findAgents(){
   let q=db.from('real_estate_agents').select('name,brokerage,email,phone,service_area,city,state,zip_codes,specialty').eq('active',true).limit(12);
   if(zip){q=q.contains('zip_codes',[zip]);}
   else{
-   const safeLocation=location.replace(/[^a-zA-Z0-9\\s'-]/g,' ').trim().replace(/\\s+/g,' ');
+   const safeLocation=location.replace(/[^a-zA-Z0-9\\s'-]/g,' ').trim().replace(/\s+/g,' ');
    if(!safeLocation) throw new Error('Enter a valid target location.');
    q=q.or('city.ilike.%'+safeLocation+'%,state.ilike.%'+safeLocation+'%,service_area.ilike.%'+safeLocation+'%');
   }
