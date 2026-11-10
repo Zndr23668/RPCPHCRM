@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RPCPH CRM — Real Estate CRM Mock</title>
+<style>
+:root{--bg:#eef0f3;--surface:#fff;--ink:#101114;--muted:#8a8b91;--line:#ececef;--accent:#9f86e8;--accent2:#d8ccff}
+*{box-sizing:border-box}body{margin:0;background:#aeb2b8;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)}
+.shell{width:min(1250px,94vw);min-height:820px;margin:42px auto;background:linear-gradient(125deg,#f7f8fa 0%,#f1f3f6 55%,#f7f7fb 100%);border:1px solid #d7d9dd;box-shadow:0 28px 70px rgba(20,22,30,.22);display:grid;grid-template-columns:74px 1fr;overflow:hidden}
+aside{padding:30px 15px;display:flex;flex-direction:column;gap:15px;border-right:1px solid rgba(0,0,0,.04)}
+.logo{width:42px;height:42px;border-radius:4px;background:#050505;color:#fff;display:grid;place-items:center;font-weight:800;font-size:20px;margin-bottom:17px}
+.nav{width:42px;height:42px;border:0;background:#fff;border-radius:5px;display:grid;place-items:center;font-size:19px;cursor:pointer}.nav.active{background:#050505;color:#fff}.nav:hover{transform:translateY(-1px)}
+main{padding:30px 30px 25px;display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:28px}
+.top{grid-column:1/-1;height:36px;display:flex;justify-content:flex-end;align-items:center;gap:20px}.top span{font-size:20px}.avatar{width:37px;height:37px;border-radius:50%;background:#e8e0d8;display:grid;place-items:center;font-size:18px}.square{width:38px;height:38px;border-radius:5px;background:#050505;color:white;display:grid;place-items:center;font-weight:700}
+.hero{min-width:0;display:flex;flex-direction:column;justify-content:space-between}.eyebrow{color:#92939a;font-size:16px;text-align:center;margin-top:6px}.title{font-size:56px;line-height:.96;letter-spacing:-3px;font-weight:400;text-align:center;margin:8px 0 22px}.building{height:470px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.building:before{content:"";position:absolute;width:75%;height:72%;bottom:10px;background:linear-gradient(150deg,#fff 0%,#e8e9eb 50%,#fff 100%);clip-path:polygon(8% 55%,18% 40%,28% 47%,39% 17%,50% 29%,62% 12%,74% 35%,88% 46%,100% 70%,95% 100%,4% 100%);filter:drop-shadow(0 22px 18px rgba(20,20,20,.13))}
+.building:after{content:"RPC";position:absolute;bottom:28px;left:47%;font-size:0}
+.metrics{display:grid;grid-template-columns:1fr 1.1fr 1fr;gap:22px;margin-top:8px}.metric .num{font-size:40px;letter-spacing:-1.5px}.metric .label{font-size:12px;color:#1d1d20}.metric small{color:#8e8e94;margin-left:6px}
+.right{display:flex;flex-direction:column;gap:8px}.card{background:rgba(255,255,255,.92);border-radius:9px;padding:18px 17px;border:1px solid rgba(0,0,0,.035);min-height:130px}.card-head{display:flex;justify-content:space-between;color:#8b8c92;font-size:16px}.dots{color:#111;font-weight:800}.big{font-size:54px;line-height:1;margin:30px 0 4px;letter-spacing:-2px}.sub{font-size:12px;color:#8d8e93}.bars{display:flex;align-items:end;height:35px;gap:3px;margin-top:15px}.bars i{display:block;width:3px;height:30px;background:#111}.bars i:nth-last-child(-n+9){background:#b69fe9}.bars i:nth-child(3n){height:25px}
+.velocity{min-height:184px}.velocity .big{margin-top:35px}.units{min-height:130px}.units .big{margin-top:35px}.total{min-height:154px}
+.ring{height:215px;margin-top:10px;position:relative;background:linear-gradient(145deg,#fdfefe 0%,#e8f2ff 45%,#c5b2ff 100%);border-radius:8px;overflow:hidden}.arc{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);width:78%;height:72%;border:1px solid #111;border-bottom:0;border-radius:300px 300px 0 0}.arc.two{width:57%;height:52%;bottom:30px}.arc.three{width:36%;height:32%;bottom:30px}.ring-value{position:absolute;bottom:12px;left:0;right:0;text-align:center;font-size:46px;letter-spacing:-2px}.ring-side{position:absolute;bottom:18px;font-size:11px}.ring-side.left{left:12px}.ring-side.right{right:12px}
+.search-card{grid-column:1/-1;background:rgba(255,255,255,.94);border-radius:10px;padding:22px 24px;display:grid;grid-template-columns:1.1fr 1fr 1fr auto;gap:12px;align-items:end;border:1px solid rgba(0,0,0,.04);margin-top:0}.search-title{grid-column:1/-1;display:flex;justify-content:space-between;align-items:end}.search-title h2{font-size:27px;font-weight:450;margin:0;letter-spacing:-1px}.search-title p{font-size:12px;color:#8a8b91;margin:0}.field label{display:block;font-size:11px;color:#888a90;margin-bottom:7px}.field input,.field select{width:100%;height:44px;border:1px solid #e0e1e5;border-radius:6px;background:#f8f8fa;padding:0 13px;font-size:14px;outline:none}.field input:focus,.field select:focus{border-color:#b79de8;background:#fff}.button{height:44px;border:0;border-radius:6px;background:#080808;color:#fff;padding:0 21px;font-weight:600;cursor:pointer}.button:hover{opacity:.9}.results{grid-column:1/-1;display:none;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:3px}.agent{background:#f7f7f8;border:1px solid #e8e8ea;border-radius:8px;padding:15px}.agent strong{display:block;font-size:15px}.agent span{display:block;font-size:12px;color:#85868c;margin-top:4px}.tag{display:inline-block;margin-top:10px;padding:4px 7px;border-radius:99px;background:#e9e0ff;color:#66519a;font-size:10px}.empty{grid-column:1/-1;color:#888;text-align:center;padding:10px;font-size:12px}
+@media(max-width:1000px){main{grid-template-columns:1fr}.right{display:grid;grid-template-columns:1fr 1fr}.search-card{grid-template-columns:1fr 1fr}.building{height:390px}.title{font-size:48px}}
+@media(max-width:650px){.shell{width:100%;margin:0;min-height:100vh}.shell{grid-template-columns:58px 1fr}aside{padding:20px 8px}.nav,.logo{width:38px;height:38px}main{padding:20px 15px}.right{display:flex}.title{font-size:40px}.metrics{gap:10px}.metric .num{font-size:28px}.search-card{grid-template-columns:1fr}.search-title{display:block}.search-title p{margin-top:6px}.results{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside>
+<div class="logo">R.</div>
+<button class="nav active" aria-label="Overview">⌘</button><button class="nav" aria-label="Money">$</button><button class="nav" aria-label="Leads">◉</button><button class="nav" aria-label="Documents">▤</button><button class="nav" aria-label="Analytics">▥</button>
+</aside>
+<main>
+<div class="top"><span>⌕</span><span>♧<sup>3</sup></span><span>☼</span><div class="avatar">👩🏻</div><div class="square">N</div></div>
+<section class="hero">
+<div><div class="eyebrow">Projects Overview</div><div class="title">Crescent Park<br>Residences</div></div>
+<div class="building" aria-label="Property mock image"></div>
+<div class="metrics">
+<div class="metric"><span class="num">89%</span><span class="label">Sell-through</span><small>137 of 154 units</small></div>
+<div class="metric"><span class="num">589,740</span><span class="label">Total available</span><small>17 units</small></div>
+<div class="metric"><span class="num">3</span><span class="label">Units sold</span><small>last 30 days</small></div>
+</div>
+</section>
+<section class="right">
+<div class="card velocity"><div class="card-head"><span>Lead Velocity</span><span class="dots">•••</span></div><div class="big">20%</div><div class="sub">20 Leads &nbsp;&nbsp; 4 Active &nbsp;&nbsp; 24 Total</div><div class="bars"><i style="height:16px"></i><i style="height:19px"></i><i style="height:22px"></i><i style="height:25px"></i><i style="height:28px"></i><i style="height:31px"></i><i style="height:34px"></i><i style="height:16px"></i><i style="height:19px"></i><i style="height:22px"></i><i style="height:25px"></i><i style="height:28px"></i><i style="height:31px"></i><i style="height:34px"></i><i style="height:16px"></i><i style="height:19px"></i><i style="height:22px"></i><i style="height:25px"></i><i style="height:28px"></i><i style="height:31px"></i><i style="height:34px"></i><i style="height:16px"></i><i style="height:19px"></i><i style="height:22px"></i><i style="height:25px"></i><i style="height:28px"></i><i style="height:31px"></i><i style="height:34px"></i></div></div>
+<div class="card total"><div class="card-head"><span>Total Portfolio</span></div><div class="big">3,589,740 USD</div><div class="sub">6 active projects</div></div>
+<div class="card units"><div class="card-head"><span>Units Sold</span><span class="dots">•••</span></div><div class="big">545<sup style="font-size:13px">+12</sup></div><div class="bars"><i style="height:8px"></i><i style="height:15px"></i><i style="height:22px"></i><i style="height:29px"></i><i style="height:36px"></i><i style="height:8px"></i><i style="height:15px"></i><i style="height:22px"></i><i style="height:29px"></i><i style="height:36px"></i><i style="height:8px"></i><i style="height:15px"></i></div></div>
+<div class="card" style="padding:0"><div class="card-head" style="padding:18px 17px 0"><span>Total Units</span><span class="dots">•••</span></div><div class="ring"><div class="arc"></div><div class="arc two"></div><div class="arc three"></div><div class="ring-side left">545 Sold</div><div class="ring-side right">93 Available</div><div class="ring-value">72.7%</div></div></div>
+</section>
+<section class="search-card">
+<div class="search-title"><h2>Find a Real Estate Agent</h2><p>Search agents by client need and target territory.</p></div>
+<div class="field"><label>CLIENT NAME</label><input id="client" placeholder="e.g. Michael Anderson"></div>
+<div class="field"><label>TARGET LOCATION</label><input id="location" placeholder="City, county or neighborhood"></div>
+<div class="field"><label>ZIP CODE <span style="color:#aaa">OR</span></label><input id="zip" inputmode="numeric" placeholder="e.g. 90210"></div>
+<button class="button" onclick="findAgents()">Find Agents</button>
+<div id="results" class="results"></div>
+</section>
+</main>
+</div>
+<script>
+function findAgents(){
+ const client=document.getElementById('client').value.trim();
+ const location=document.getElementById('location').value.trim();
+ const zip=document.getElementById('zip').value.trim();
+ const r=document.getElementById('results');
+ if(!client && !location && !zip){r.style.display='grid';r.innerHTML='<div class="empty">Enter a client name and a target location or ZIP to search the mock agent directory.</div>';return}
+ const scope=location||('ZIP '+zip);
+ const agents=[
+  ['Avery Morgan','Residential Specialist · '+scope,'12 active listings'],
+  ['Jordan Ellis','Luxury & relocation · '+scope,'8 active listings'],
+  ['Taylor Brooks','Buyer representation · '+scope,'16 active listings']
+ ];
+ r.style.display='grid';
+ r.innerHTML=agents.map(a=>'<div class="agent"><strong>'+a[0]+'</strong><span>'+a[1]+'</span><span>'+a[2]+'</span><span class="tag">Matches territory</span></div>').join('');
+}
+</script>
+</body>
+</html>
