@@ -149,6 +149,52 @@ main{
 @media(max-width:650px){
   .shell{background-attachment:scroll;background-position:58% center}
 }
+
+/* Stronger glass treatment — final overrides for the actual dashboard selectors */
+.search-card,
+.right .card,
+.metric.card,
+.agent,
+.ring{
+  background:rgba(255,255,255,.24) !important;
+  background-image:none !important;
+  border:1px solid rgba(255,255,255,.72) !important;
+  box-shadow:
+    0 12px 36px rgba(16,36,68,.10),
+    0 2px 8px rgba(16,36,68,.045),
+    inset 0 1px 0 rgba(255,255,255,.88),
+    inset 0 -1px 0 rgba(255,255,255,.22) !important;
+  -webkit-backdrop-filter:blur(24px) saturate(175%) !important;
+  backdrop-filter:blur(24px) saturate(175%) !important;
+}
+.search-card{background:rgba(255,255,255,.30) !important}
+.right .card,.metric.card,.agent{background:rgba(255,255,255,.22) !important}
+.ring{
+  background:linear-gradient(145deg,rgba(255,255,255,.32),rgba(190,218,246,.22),rgba(160,188,226,.24)) !important;
+}
+.search-card .field input,
+.search-card .field select{
+  background:rgba(255,255,255,.38) !important;
+  border:1px solid rgba(255,255,255,.78) !important;
+  box-shadow:inset 0 1px 4px rgba(20,40,70,.035);
+  -webkit-backdrop-filter:blur(12px) !important;
+  backdrop-filter:blur(12px) !important;
+}
+.agent-detail{border-top-color:rgba(255,255,255,.58) !important}
+.agent-avatar,.tag,.demo-note{
+  background:rgba(234,241,251,.58) !important;
+  border:1px solid rgba(255,255,255,.66);
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .search-card,.right .card,.metric.card,.agent,.ring{background:rgba(255,255,255,.86) !important}
+}
+@media(max-width:650px){
+  .search-card,.right .card,.metric.card,.agent,.ring{
+    -webkit-backdrop-filter:blur(18px) saturate(165%) !important;
+    backdrop-filter:blur(18px) saturate(165%) !important;
+  }
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
