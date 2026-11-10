@@ -22,6 +22,48 @@ main{padding:30px clamp(18px,3vw,48px) 32px;display:grid;grid-template-columns:m
 .search-card{grid-column:1/-1;background:rgba(255,255,255,.94);border-radius:10px;padding:22px 24px;display:grid;grid-template-columns:1.1fr 1fr 1fr auto;gap:12px;align-items:end;border:1px solid rgba(0,0,0,.04);margin-top:0}.search-title{grid-column:1/-1;display:flex;justify-content:space-between;align-items:end}.search-title h2{font-size:27px;font-weight:450;margin:0;letter-spacing:-1px}.search-title p{font-size:12px;color:#8a8b91;margin:0}.field label{display:block;font-size:11px;color:#888a90;margin-bottom:7px}.field input,.field select{width:100%;height:44px;border:1px solid #e0e1e5;border-radius:6px;background:#f8f8fa;padding:0 13px;font-size:14px;outline:none}.field input:focus,.field select:focus{border-color:#b79de8;background:#fff}.button{height:44px;border:0;border-radius:6px;background:#080808;color:#fff;padding:0 21px;font-weight:600;cursor:pointer}.button:hover{opacity:.9}.results{grid-column:1/-1;display:none;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:3px}.agent{background:#f7f7f8;border:1px solid #e8e8ea;border-radius:8px;padding:15px}.agent strong{display:block;font-size:15px}.agent span{display:block;font-size:12px;color:#85868c;margin-top:4px}.tag{display:inline-block;margin-top:10px;padding:4px 7px;border-radius:99px;background:#e9e0ff;color:#66519a;font-size:10px}.empty{grid-column:1/-1;color:#888;text-align:center;padding:10px;font-size:12px}
 @media(max-width:1000px){main{grid-template-columns:1fr}.right{display:grid;grid-template-columns:1fr 1fr}.search-card{grid-template-columns:1fr 1fr}.building{height:390px}.title{font-size:48px}}
 @media(max-width:650px){.shell{width:100%;margin:0;min-height:100vh}.shell{grid-template-columns:58px 1fr}aside{padding:20px 8px}.nav,.logo{width:38px;height:38px}main{padding:20px 15px}.right{display:flex}.title{font-size:40px}.metrics{gap:10px}.metric .num{font-size:28px}.search-card{grid-template-columns:1fr}.search-title{display:block}.search-title p{margin-top:6px}.results{grid-template-columns:1fr}}
+
+/* Internal CRM layout update — preserve the original dashboard visual language */
+main{grid-template-columns:minmax(0,1fr) 390px;align-content:start;row-gap:18px}
+.top{grid-column:1/-1}
+.search-card{grid-column:1/-1;grid-row:auto;margin:0 0 2px;grid-template-columns:1.1fr 1fr 1fr auto}
+.search-title{grid-column:1/-1}
+.hero{min-width:0;display:flex;flex-direction:column;gap:14px;justify-content:flex-start}
+.building{height:390px;border-radius:10px;isolation:isolate;background:
+ radial-gradient(ellipse at 52% 100%,rgba(178,158,226,.28),transparent 42%),
+ radial-gradient(ellipse at 18% 18%,rgba(255,255,255,.94),transparent 38%),
+ linear-gradient(145deg,#f6f7fb 0%,#e9edf4 48%,#e7e1f5 100%);}
+.building:before{width:84%;height:72%;bottom:0;left:8%;background:
+ linear-gradient(90deg,rgba(255,255,255,.92),rgba(228,230,238,.82)),
+ repeating-linear-gradient(90deg,rgba(255,255,255,.75) 0 2px,transparent 2px 42px);
+ clip-path:polygon(0 40%,10% 40%,10% 22%,22% 22%,22% 34%,34% 34%,34% 10%,48% 10%,48% 29%,60% 29%,60% 0,74% 0,74% 18%,86% 18%,86% 36%,100% 36%,100% 100%,0 100%);
+ filter:drop-shadow(0 18px 20px rgba(35,37,54,.10));opacity:.82}
+.building:after{content:"";position:absolute;inset:0;background:
+ linear-gradient(110deg,transparent 0 47%,rgba(255,255,255,.42) 47.2% 47.6%,transparent 47.8%),
+ linear-gradient(0deg,rgba(255,255,255,.45),transparent 38%);z-index:1;pointer-events:none}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:0}
+.metric{min-width:0;background:rgba(255,255,255,.92);border:1px solid rgba(0,0,0,.035);border-radius:9px;padding:16px 14px;box-shadow:0 3px 16px rgba(35,37,54,.035)}
+.metric .num{display:block;font-size:34px;letter-spacing:-1.5px;line-height:1.1;margin-bottom:7px}
+.metric .label{display:block;font-size:11px;color:#1d1d20}
+.metric small{display:block;margin:5px 0 0;font-size:10px;color:#8e8e94}
+.right{align-self:start}
+.card{box-shadow:0 3px 16px rgba(35,37,54,.035)}
+.search-card{box-shadow:0 3px 16px rgba(35,37,54,.035)}
+@media(max-width:1000px){
+ main{grid-template-columns:minmax(0,1fr);row-gap:16px}
+ .search-card{grid-template-columns:1fr 1fr}
+ .hero{order:0}
+ .right{order:1}
+ .building{height:330px}
+}
+@media(max-width:650px){
+ .search-card{grid-template-columns:1fr}
+ .metrics{gap:8px}
+ .metric{padding:12px 10px}
+ .metric .num{font-size:27px}
+ .building{height:245px}
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -32,22 +74,7 @@ main{padding:30px clamp(18px,3vw,48px) 32px;display:grid;grid-template-columns:m
 <button class="nav active" aria-label="Overview">⌘</button><button class="nav" aria-label="Money">$</button><button class="nav" aria-label="Leads">◉</button><button class="nav" aria-label="Documents">▤</button><button class="nav" aria-label="Analytics">▥</button>
 </aside>
 <main>
-<div class="top"><span>⌕</span><span>♧<sup>3</sup></span><span>☼</span><div class="avatar">👩🏻</div><div class="square">N</div></div>
-<section class="hero">
-<div><div class="eyebrow">Projects Overview</div><div class="title">Crescent Park<br>Residences</div></div>
-<div class="building" aria-label="Property mock image"></div>
-<div class="metrics">
-<div class="metric"><span class="num">89%</span><span class="label">Sell-through</span><small>137 of 154 units</small></div>
-<div class="metric"><span class="num">589,740</span><span class="label">Total available</span><small>17 units</small></div>
-<div class="metric"><span class="num">3</span><span class="label">Units sold</span><small>last 30 days</small></div>
-</div>
-</section>
-<section class="right">
-<div class="card velocity"><div class="card-head"><span>Lead Velocity</span><span class="dots">•••</span></div><div class="big">20%</div><div class="sub">20 Leads &nbsp;&nbsp; 4 Active &nbsp;&nbsp; 24 Total</div><div class="bars"><i style="height:16px"></i><i style="height:19px"></i><i style="height:22px"></i><i style="height:25px"></i><i style="height:28px"></i><i style="height:31px"></i><i style="height:34px"></i><i style="height:16px"></i><i style="height:19px"></i><i style="height:22px"></i><i style="height:25px"></i><i style="height:28px"></i><i style="height:31px"></i><i style="height:34px"></i><i style="height:16px"></i><i style="height:19px"></i><i style="height:22px"></i><i style="height:25px"></i><i style="height:28px"></i><i style="height:31px"></i><i style="height:34px"></i><i style="height:16px"></i><i style="height:19px"></i><i style="height:22px"></i><i style="height:25px"></i><i style="height:28px"></i><i style="height:31px"></i><i style="height:34px"></i></div></div>
-<div class="card total"><div class="card-head"><span>Total Portfolio</span></div><div class="big">3,589,740 USD</div><div class="sub">6 active projects</div></div>
-<div class="card units"><div class="card-head"><span>Units Sold</span><span class="dots">•••</span></div><div class="big">545<sup style="font-size:13px">+12</sup></div><div class="bars"><i style="height:8px"></i><i style="height:15px"></i><i style="height:22px"></i><i style="height:29px"></i><i style="height:36px"></i><i style="height:8px"></i><i style="height:15px"></i><i style="height:22px"></i><i style="height:29px"></i><i style="height:36px"></i><i style="height:8px"></i><i style="height:15px"></i></div></div>
-<div class="card" style="padding:0"><div class="card-head" style="padding:18px 17px 0"><span>Total Units</span><span class="dots">•••</span></div><div class="ring"><div class="arc"></div><div class="arc two"></div><div class="arc three"></div><div class="ring-side left">545 Sold</div><div class="ring-side right">93 Available</div><div class="ring-value">72.7%</div></div></div>
-</section>
+<div class="top"><span>⌕</span><span>♧<sup>3</sup></span><span>☼</span><div class="avatar">👩🏻</div>
 <section class="search-card">
 <div class="search-title"><h2>Find a Real Estate Agent</h2><p>Search agents by client need and target territory.</p></div>
 <div class="field"><label>CLIENT NAME</label><input id="client" placeholder="e.g. Michael Anderson"></div>
@@ -56,6 +83,22 @@ main{padding:30px clamp(18px,3vw,48px) 32px;display:grid;grid-template-columns:m
 <button class="button" onclick="findAgents()">Find Agents</button>
 <div id="results" class="results"></div>
 </section>
+<div class="square">N</div></div>
+<section class="hero">
+<div class="building" aria-label="Decorative property-inspired wallpaper"></div>
+<div class="metrics">
+<div class="metric card"><span class="num">89%</span><span class="label">Sell-through</span><small>137 of 154 units</small></div>
+<div class="metric card"><span class="num">589,740</span><span class="label">Total available</span><small>17 units</small></div>
+<div class="metric card"><span class="num">3</span><span class="label">Units sold</span><small>last 30 days</small></div>
+</div>
+</section>
+<section class="right">
+<div class="card velocity"><div class="card-head"><span>Lead Velocity</span><span class="dots">•••</span></div><div class="big">20%</div><div class="sub">20 Leads &nbsp;&nbsp; 4 Active &nbsp;&nbsp; 24 Total</div><div class="bars"><i style="height:16px"></i><i style="height:19px"></i><i style="height:22px"></i><i style="height:25px"></i><i style="height:28px"></i><i style="height:31px"></i><i style="height:34px"></i><i style="height:16px"></i><i style="height:19px"></i><i style="height:22px"></i><i style="height:25px"></i><i style="height:28px"></i><i style="height:31px"></i><i style="height:34px"></i><i style="height:16px"></i><i style="height:19px"></i><i style="height:22px"></i><i style="height:25px"></i><i style="height:28px"></i><i style="height:31px"></i><i style="height:34px"></i><i style="height:16px"></i><i style="height:19px"></i><i style="height:22px"></i><i style="height:25px"></i><i style="height:28px"></i><i style="height:31px"></i><i style="height:34px"></i></div></div>
+<div class="card total"><div class="card-head"><span>Total Portfolio</span></div><div class="big">3,589,740 USD</div><div class="sub">6 active projects</div></div>
+<div class="card units"><div class="card-head"><span>Units Sold</span><span class="dots">•••</span></div><div class="big">545<sup style="font-size:13px">+12</sup></div><div class="bars"><i style="height:8px"></i><i style="height:15px"></i><i style="height:22px"></i><i style="height:29px"></i><i style="height:36px"></i><i style="height:8px"></i><i style="height:15px"></i><i style="height:22px"></i><i style="height:29px"></i><i style="height:36px"></i><i style="height:8px"></i><i style="height:15px"></i></div></div>
+<div class="card" style="padding:0"><div class="card-head" style="padding:18px 17px 0"><span>Total Units</span><span class="dots">•••</span></div><div class="ring"><div class="arc"></div><div class="arc two"></div><div class="arc three"></div><div class="ring-side left">545 Sold</div><div class="ring-side right">93 Available</div><div class="ring-value">72.7%</div></div></div>
+</section>
+
 </main>
 </div>
 <script>
