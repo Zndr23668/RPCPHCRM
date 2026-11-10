@@ -87,7 +87,18 @@ main{grid-template-columns:minmax(0,1fr) 390px;align-content:start;row-gap:18px}
 @media(max-width:1000px){.results{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.results{grid-template-columns:1fr}.results-heading{align-items:flex-start;flex-direction:column}.demo-note{white-space:normal}}
 
-</style>
+
+/* Subtle luxury architecture wallpaper */
+.shell{
+ background-color:#f7f8fa;
+ background-image:
+  linear-gradient(rgba(247,248,250,.78),rgba(247,248,250,.78)),
+  url('/luxury-building-wallpaper.svg');
+ background-size:cover;
+ background-position:center center;
+ background-attachment:fixed;
+}
+\n</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
