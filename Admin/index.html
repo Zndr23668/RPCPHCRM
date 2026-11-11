@@ -123,9 +123,9 @@ tbody tr:hover{background:rgba(255,255,255,.24)}
     </div>
     <div id="reviewNotice" class="notice"></div>
     <div class="section-head" style="margin-top:22px"><div><h2>Employee record preview</h2><p class="helper">Original assigned-area text is preserved exactly as it appears in the sheet.</p></div><span id="previewCount" class="count">0 rows shown</span></div>
-    <div class="table-wrap"><table><thead><tr><th>Name</th><th>Office</th><th>Email</th><th>Mobile / Contact</th><th>Assigned Areas — original cell</th></tr></thead><tbody id="previewBody"><tr><td colspan="5" class="empty">Upload a spreadsheet to preview employee rows.</td></tr></tbody></table></div>
+    <div class="table-wrap"><table><thead><tr><th>Name</th><th>Office</th><th>Email</th><th>Mobile / Contact</th><th>Assigned Areas — original cell</th><th>Parsed locations</th><th>ZIP codes</th><th>Review</th></tr></thead><tbody id="previewBody"><tr><td colspan="5" class="empty">Upload a spreadsheet to preview employee rows.</td></tr></tbody></table></div>
     <div class="actions"><button id="downloadBtn" class="action" type="button">Download reviewed CSV</button><button id="importBtn" class="action primary" type="button">Import to database</button><button id="clearBtn" class="action" type="button">Clear file</button></div>
-    <div id="importNotice" class="notice"></div><p class="footer-note">Import saves each employee profile to Supabase. Assigned-area text is preserved as supplied; ZIP matching will be a separate reviewed step. Existing records with the same email, or the same name when email is blank, are skipped.</p>
+    <div id="importNotice" class="notice"></div><p class="footer-note">Import preserves the original Assigned Areas cell and also stores normalized individual locations in service_areas plus recognized ZIP codes in zip_codes. Ambiguous/unrecognized locations are flagged in the preview and are never assigned guessed ZIP codes. Existing records with the same email, or the same name when email is blank, are skipped.</p>
   </section>
 </main>
 </div>
@@ -178,16 +178,16 @@ function buildRecords(){
  }).filter(r=>fields.some(f=>r[f.key]!== ""));
 }
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-function renderPreview(){
+const localityZipMap={\n "beverly hills":["90210"],\n "west hollywood":["90069"],\n "santa monica":["90401"],\n "los angeles":[]\n};\nconst stateTokens=new Set(["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"]);\nfunction parseAssignedAreas(value){\n const raw=String(value??"").trim(); if(!raw)return {locations:[],zips:[],review:[]};\n const zips=[...raw.matchAll(/\\b\\d{5}\\b/g)].map(m=>m[0]);\n let parts=raw.replace(/\\b\\d{5}(-\\d{4})?\\b/g," ").split(/[\\n;|•]+|\\s+\\/\\s+/).flatMap(s=>s.split(/,(?!\\s*(?:[A-Za-z]{2}|[A-Za-z .'-]+\\b))/));\n const merged=[];\n for(let i=0;i<parts.length;i++){let part=parts[i].trim().replace(/^[-•*\\s]+|[-•*\\s]+$/g,"");if(!part)continue; if(stateTokens.has(part.toUpperCase())&&merged.length){merged[merged.length-1]+=" , "+part.toUpperCase();}else merged.push(part);}\n const locations=[...new Map(merged.map(s=>[s.toLowerCase().replace(/\\s+/g," "),s])).values()];\n const review=[];\n for(const loc of locations){const key=loc.toLowerCase().replace(/,\\s*[a-z]{2}$/i,"").replace(/\\s+/g," ").trim();if(Object.prototype.hasOwnProperty.call(localityZipMap,key)){zips.push(...localityZipMap[key]);if(!localityZipMap[key].length)review.push(loc+" — broad area; multiple ZIP codes");}else if(!/\\b[A-Z]{2}\\b/.test(loc)&&!/^\\d{5}$/.test(loc)){review.push(loc+" — ZIP not verified; review needed");}}\n return {locations,zips:[...new Set(zips)],review};\n}\nfunction renderPreview(){
  const body=$("previewBody");
  const shown=records.slice(0,15);
  if(!records.length){body.innerHTML='<tr><td colspan="5" class="empty">No employee rows found. Check the column mapping or selected worksheet.</td></tr>';}
  else{
-  body.innerHTML=shown.map(r=>'<tr><td><b>'+esc(r.name||"—")+'</b></td><td>'+esc(r.office||"—")+'</td><td>'+esc(r.email||"—")+'</td><td>'+esc(r.mobile||"—")+'</td><td class="area">'+esc(r.areas||"—")+'</td></tr>').join("");
+  body.innerHTML=shown.map(r=>{const a=parseAssignedAreas(r.areas);return '<tr><td><b>'+esc(r.name||"—")+'</b></td><td>'+esc(r.office||"—")+'</td><td>'+esc(r.email||"—")+'</td><td>'+esc(r.mobile||"—")+'</td><td class="area">'+esc(r.areas||"—")+'</td><td class="area">'+esc(a.locations.join(", ")||"—")+'</td><td>'+esc(a.zips.join(", ")||"—")+'</td><td>'+esc(a.review.length?a.review.join("; "):"Ready")+(a.review.length?" ⚠":" ✓")+'</td></tr>';}).join("");
  }
  const named=records.filter(r=>r.name).length;
  const area=records.filter(r=>r.areas).length;
- const issues=records.filter(r=>!r.name||!r.areas).length;
+ const issues=records.filter(r=>!r.name||!r.areas||parseAssignedAreas(r.areas).review.length).length;
  $("rowCount").textContent=records.length;
  $("nameCount").textContent=named;
  $("areaCount").textContent=area;
@@ -196,7 +196,7 @@ function renderPreview(){
  const missing=fields.filter(f=>mapping[f.key]==="").map(f=>f.label);
  if(missing.length)showNotice($("reviewNotice"),"Map these required fields before exporting: "+missing.join(", ")+".","warn");
  else if(issues)showNotice($("reviewNotice"),issues+" row(s) are missing a name or assigned area and should be checked.","warn");
- else showNotice($("reviewNotice"),"All five fields are mapped. The source area text is preserved and ready for location review.","info");
+ else showNotice($("reviewNotice"),issues?issues+" row(s) need location review. Only explicit ZIPs and the small verified locality list are assigned; ambiguous areas are not guessed.":"All five fields are mapped. Original area text is preserved; normalized locations and ZIP codes are ready.",issues?"warn":"info");
  $("downloadBtn").disabled=!records.length||missing.length>0;
 }
 function parseWorkbook(file){
@@ -255,7 +255,7 @@ async function importToDatabase(){
   for(const r of valid){
    const email=String(r.email||"").trim().toLowerCase(), name=String(r.name||"").trim().toLowerCase();
    if((email&&emailSet.has(email))||(!email&&nameSet.has(name))){skipped++;continue;}
-   fresh.push({name:String(r.name).trim(),brokerage:r.office||"",email:r.email||null,phone:r.mobile||null,service_area:r.areas||null,zip_codes:[],active:true});
+   const parsed=parseAssignedAreas(r.areas);\n   fresh.push({name:String(r.name).trim(),brokerage:r.office||"",email:r.email||null,phone:r.mobile||null,service_area:r.areas||null,service_areas:parsed.locations,zip_codes:parsed.zips,active:true});
    if(email)emailSet.add(email);else nameSet.add(name);
   }
   let imported=0;
