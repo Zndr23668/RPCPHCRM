@@ -184,7 +184,7 @@ tbody tr:hover{background:rgba(255,255,255,.28)}
    <div class="table-wrap"><table style="min-width:650px"><thead><tr><th>Agent</th><th>Matched address</th><th>City / County / State</th><th>ZIP</th><th>Status</th><th>Effective</th></tr></thead><tbody id="locationRows"><tr><td colspan="6" class="empty">Loading locations…</td></tr></tbody></table></div>
   </div>
  </div>
- <p class="hint">Changing an office/base location updates the agent's current city, state, and ZIP fields and creates a separate “base” assignment for the matched place or county. Existing coverage and primary territory assignments are not removed automatically.</p>
+ <p class="hint">Changing an office/base location updates the agent's current city/state summary, records the ZIP on the location history row, and creates a separate “base” assignment for the matched place or county. Existing coverage and primary territory assignments are not removed automatically.</p>
 </section>
 
 <p class="footer">Geographic reference seed: U.S. Census county/state codes and a starter locality catalog. Address-to-geography enrichment uses the Census Geocoder. ZIP Codes returned for a specific address are stored as address-level ZIP records; Census ZCTAs are statistical approximations and are not treated as exact USPS delivery boundaries.</p>
@@ -461,7 +461,7 @@ async function saveLocation(){
   if(closeErr)throw closeErr;
   const {error:currentErr}=await db.from("agent_locations").update({is_current:true}).eq("id",newLoc.id);
   if(currentErr)throw currentErr;
-  const {error:profileErr}=await db.from("real_estate_agents").update({city:g.placeName||null,state:abbr,zip_codes:g.zip?[g.zip]:[]}).eq("id",agentId);
+  const {error:profileErr}=await db.from("real_estate_agents").update({city:g.placeName||null,state:abbr}).eq("id",agentId);
   if(profileErr)throw profileErr;
   const {error:baseCloseErr}=await db.from("agent_area_assignments").update({is_active:false,effective_to:now.slice(0,10)}).eq("agent_id",agentId).eq("assignment_type","base").eq("is_active",true);
   if(baseCloseErr)throw baseCloseErr;
