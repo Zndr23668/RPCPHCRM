@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head>
+<head>\n<link rel="stylesheet" href="/crm-motion.css">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#edf2f8">
@@ -320,5 +320,5 @@ $("importBtn").addEventListener("click",importToDatabase);
 $("clearBtn").addEventListener("click",clearFile);
 </script>
 <script>RPCPHAuth.requireAuth(["admin","superadmin"]).catch(()=>location.replace("/Login/"));</script>
-</body>
+<script src="/crm-motion.js" defer></script>\n</body>
 </html>
