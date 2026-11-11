@@ -195,6 +195,35 @@ main{
   }
 }
 
+
+/* Lead-first employee workflow */
+.search-card.lead-workflow{grid-template-columns:1fr;gap:13px;padding:23px 24px}
+.lead-workflow .search-title{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.lead-workflow .search-title h2{font-size:28px}
+.isa-stamp{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border-radius:99px;background:rgba(1,33,105,.08);border:1px solid rgba(255,255,255,.7);font-size:9px;letter-spacing:.45px;font-weight:800;color:#29476f;white-space:nowrap}
+.lead-grid{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.lead-grid .field{min-width:0}
+.lead-grid .field label{font-size:10px;letter-spacing:.5px}
+.lead-grid .field input,.lead-grid .field select{height:45px;border:1px solid rgba(255,255,255,.86);border-radius:8px;background:rgba(255,255,255,.56);padding:0 13px;font-size:12px;box-shadow:inset 0 1px 3px rgba(20,40,70,.025)}
+.lead-grid .field input:focus,.lead-grid .field select:focus{background:rgba(255,255,255,.82);border-color:#418FDE}
+.isa-placeholder{height:45px;display:flex;align-items:center;gap:9px;padding:0 12px;border-radius:8px;background:rgba(255,255,255,.30);border:1px dashed rgba(1,33,105,.19);font-size:10px;color:#77849a}
+.isa-dot{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#8a99ad}
+.lead-actions{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:14px;padding-top:2px}
+.lead-helper{font-size:10px;line-height:1.5;color:#788397}
+.lead-helper b{color:#29476f}
+.lead-actions .button{height:46px;min-width:210px;border-radius:8px}
+.lead-status{display:none;grid-column:1/-1;padding:10px 12px;border-radius:8px;font-size:11px;line-height:1.5}
+.lead-status.show{display:block}
+.lead-status.info{background:rgba(65,143,222,.10);color:#244d7c;border:1px solid rgba(65,143,222,.18)}
+.lead-status.warn{background:rgba(189,125,35,.10);color:#79551e;border:1px solid rgba(189,125,35,.2)}
+.lead-status.good{background:rgba(46,148,98,.10);color:#24764f;border:1px solid rgba(46,148,98,.18)}
+.results-heading .demo-note.live{background:rgba(46,148,98,.12)!important;color:#24764f}
+.agent-distance{display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:750;color:#214c82;white-space:nowrap}
+.agent-distance.unknown{color:#8a6b34}
+.agent-match-note{font-size:9px;color:#85858d;line-height:1.45}
+@media(max-width:1000px){.lead-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.search-card.lead-workflow{grid-template-columns:1fr}}
+@media(max-width:650px){.lead-grid{grid-template-columns:1fr}.lead-workflow .search-title{align-items:flex-start;flex-direction:column}.lead-workflow .search-title h2{font-size:23px}.isa-stamp{white-space:normal}.lead-actions{align-items:stretch;flex-direction:column}.lead-actions .button{width:100%;min-width:0}.lead-helper{order:1}}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -209,12 +238,24 @@ main{
 <div class="top"><span>⌕</span><span>♧<sup>3</sup></span><span>☼</span><div class="avatar">👩🏻</div>
 
 <div class="square">N</div></div>
-<section class="search-card">
-<div class="search-title"><h2>Find a Real Estate Agent</h2><p>Search agents by client need and target territory.</p></div>
-<div class="field"><label>CLIENT NAME</label><input id="client" placeholder="e.g. Michael Anderson"></div>
-<div class="field"><label>TARGET LOCATION</label><input id="location" placeholder="City, county or neighborhood"></div>
-<div class="field"><label>ZIP CODE <span style="color:#aaa">OR</span></label><input id="zip" inputmode="numeric" placeholder="e.g. 90210"></div>
-<button class="button" onclick="findAgents()">Find Agents</button>
+<section class="search-card lead-workflow" id="lead-workflow">
+<div class="search-title">
+ <div><h2>New Lead · Find Available Agents</h2><p>Capture the caller's request, save the lead, then find agents serving the County used.</p></div>
+ <span class="isa-stamp">ISA · AUTO-STAMP FROM STAFF LOGIN LATER</span>
+</div>
+<div class="lead-grid">
+ <div class="field"><label for="leadName">LEAD NAME · CLIENT WHO CALLED</label><input id="leadName" autocomplete="off" placeholder="Client full name" required></div>
+ <div class="field"><label for="townCounty">TOWN OR COUNTY · CALLER LOCATION</label><input id="townCounty" autocomplete="off" placeholder="Manually enter town or county"></div>
+ <div class="field"><label for="leadType">LEAD TYPE</label><select id="leadType"><option value="">Select lead type</option><option value="buyer">Buyer</option><option value="seller">Seller</option><option value="investor">Investor</option><option value="land">Land</option></select></div>
+ <div class="field"><label for="countyUsed">COUNTY USED · CLIENT'S TARGET AREA</label><input id="countyUsed" list="countyOptions" autocomplete="off" placeholder="County the client is looking in"><datalist id="countyOptions"></datalist></div>
+ <div class="field"><label for="leadSource">LEAD SOURCE</label><select id="leadSource"><option value="">Select lead source</option><option>MVIP New Prospect</option><option>MVIP BLA</option><option>MVIP Prio CB</option><option>Rocket Mortgage</option><option>Website</option><option>Internet Call</option><option>Cold Call</option><option>Other</option></select></div>
+ <div class="field isa-field"><label>ISA RECORD STAMP</label><div class="isa-placeholder"><span class="isa-dot"></span>Will be filled automatically from employee login</div></div>
+</div>
+<div class="lead-actions">
+ <div class="lead-helper">Agent matching is based on <b>County used</b>, not the caller's Town or County field.</div>
+ <button class="button" id="submitLeadButton" type="button" onclick="submitLeadAndFindAgents()">Save Lead &amp; Find Agents</button>
+</div>
+<div id="leadStatus" class="lead-status" role="status" aria-live="polite"></div>
 <div id="results" class="results"></div>
 </section>
 
@@ -245,13 +286,15 @@ function agentInitials(name){
 }
 function showAgentResults(rows, context, isPreview){
  const r=document.getElementById('results');
- const heading='<div class="results-heading"><div><strong>'+ (isPreview?'Search result preview':'Agent directory results') +'</strong><small>Client: '+esc(context.client)+' &nbsp;·&nbsp; Target: '+esc(context.target)+'</small></div><span class="demo-note">'+(isPreview?'MOCKUP · SAMPLE PROFILES':'DEMO DATA · NOT VERIFIED')+'</span></div>';
+ const heading='<div class="results-heading"><div><strong>Available agent matches</strong><small>Lead: '+esc(context.client)+' · County used: '+esc(context.target)+'</small></div><span class="demo-note live">LIVE AGENT DIRECTORY</span></div>';
  const cards=rows.map((a,index)=>{
   const area=isPreview?context.target:([...(a.service_areas||[]),a.service_area,[a.city,a.state].filter(Boolean).join(', ')].filter(Boolean).join(' · ')||context.target);
-  const brokerage=a.brokerage||'Sample Realty Group';
+  const brokerage=a.brokerage||'Brokerage not listed';
   const specialty=a.specialty||'Residential real estate';
   const initials=agentInitials(a.name);
-  const contact=isPreview?'Illustrative profile only':(a.email||a.phone||'Contact details not provided');
+  const contact=a.email||a.phone||'Contact details not provided';
+  const distance=Number.isFinite(a.__distanceMiles)?'<span class="agent-distance">⌖ '+a.__distanceMiles.toFixed(1)+' miles away</span>':'<span class="agent-distance unknown">Distance not available</span>';
+  const matchNote=a.__matchType==='assignment'?'Assigned to this territory':a.__matchType==='service_text'?'Area listed in agent profile':'Territory match';
   return '<article class="agent">'+
    '<div class="agent-top"><div class="agent-avatar">'+esc(initials)+'</div><div><div class="agent-name">'+esc(a.name)+'</div><div class="agent-company">'+esc(brokerage)+'</div></div></div>'+
    '<div class="agent-detail">'+
@@ -259,7 +302,7 @@ function showAgentResults(rows, context, isPreview){
     '<div class="agent-line"><span>✧</span><span><b>Specialty</b><br>'+esc(specialty)+'</span></div>'+
     '<div class="agent-line"><span>✉</span><span><b>Contact</b><br>'+esc(contact)+'</span></div>'+
    '</div>'+
-   '<div class="agent-footer"><span class="tag">'+(isPreview?'Sample result':'Directory profile')+'</span><span class="agent-match">Profile '+String(index+1).padStart(2,'0')+'</span></div>'+
+   '<div class="agent-footer"><span class="tag">'+esc(matchNote)+'</span>'+distance+'</div>'+
   '</article>';
  }).join('');
  r.innerHTML=heading+cards;
@@ -309,76 +352,189 @@ async function findAgentMatchesInTerritories(location,zip,columns){
  if(error)throw error;
  return data||[];
 }
-async function findAgents(){
- const client=document.getElementById('client').value.trim();
- const location=document.getElementById('location').value.trim();
- const zip=document.getElementById('zip').value.replace(/\D/g,'').trim();
- const r=document.getElementById('results');
- const button=document.querySelector('.search-card .button');
- if(!location&&!zip){
-  r.style.display='grid';
-  r.innerHTML='<div class="empty">Enter a city, neighborhood, county or ZIP code to search the live agent directory.</div>';
-  return;
+function setLeadStatus(message,type="info"){
+ const el=document.getElementById('leadStatus');
+ el.textContent=message;
+ el.className='lead-status show '+type;
+}
+function normalizeLeadText(v){
+ return String(v||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim().replace(/\\s+/g,' ');
+}
+function inferLeadState(value){
+ const s=String(value||'').toLowerCase();
+ const codes=['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC'];
+ const codeMatch=s.match(/(?:^|[,\\s])([a-z]{2})(?:$|[,\\s])/i);
+ if(codeMatch&&codes.includes(codeMatch[1].toUpperCase()))return codeMatch[1].toUpperCase();
+ if(/\\b(north carolina|raleigh|durham|chapel hill|cary|apex|wake forest|johnston|harnett|alamance|chatham)\\b/i.test(s))return 'NC';
+ if(/\\b(california|los angeles|irvine|beverly hills|san diego|santa monica|san francisco)\\b/i.test(s))return 'CA';
+ if(/\\b(texas|austin|round rock)\\b/i.test(s))return 'TX';
+ if(/\\b(washington|seattle)\\b/i.test(s))return 'WA';
+ return null;
+}
+async function resolveCountyUsed(countyText,townText){
+ const norm=normalizeLeadText(countyText).replace(/\\s+county$/,'').trim();
+ if(!norm)return {area:null,candidates:[]};
+ const stateCode=inferLeadState(townText+' '+countyText);
+ const [exact,alias]=await Promise.all([
+  db.from('geo_areas').select('*').eq('area_type','county').eq('is_active',true),
+  db.from('geo_area_aliases').select('area_id').eq('normalized_alias',normalizeLeadText(countyText))
+ ]);
+ if(exact.error)throw exact.error;
+ if(alias.error)throw alias.error;
+ const aliasIds=[...new Set((alias.data||[]).map(x=>x.area_id))];
+ const matched=(exact.data||[]).filter(a=>{
+  const name=normalizeLeadText(a.name).replace(/\\s+county$/,'');
+  const county=normalizeLeadText(a.county_name||'').replace(/\\s+county$/,'');
+  return name===norm||county===norm||aliasIds.includes(a.id);
+ });
+ const filtered=stateCode?matched.filter(a=>a.state_code===stateCode):matched;
+ const candidates=filtered.length?filtered:matched;
+ return {area:candidates.length===1?candidates[0]:null,candidates,stateCode};
+}
+async function fetchCountyCentroid(area){
+ if(Number.isFinite(Number(area.latitude))&&Number.isFinite(Number(area.longitude))&&area.latitude!==null&&area.longitude!==null)
+  return {lat:Number(area.latitude),lng:Number(area.longitude)};
+ if(!area.state_fips||!area.county_fips)return null;
+ const geoid=String(area.state_fips).padStart(2,'0')+String(area.county_fips).padStart(3,'0');
+ const where="GEOID='"+geoid+"'";
+ const url="https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/19/query?where="+encodeURIComponent(where)+"&outFields=GEOID,NAME,STATE,COUNTY&returnGeometry=true&returnCentroid=true&outSR=4326&f=json";
+ const response=await fetch(url,{headers:{Accept:'application/json'}});
+ if(!response.ok)throw new Error('County centroid lookup returned HTTP '+response.status);
+ const json=await response.json();
+ const feature=json?.features?.[0],geometry=feature?.geometry||{};
+ const lat=Number(geometry.y??geometry.centroid?.y),lng=Number(geometry.x??geometry.centroid?.x);
+ if(!Number.isFinite(lat)||!Number.isFinite(lng))return null;
+ await db.from('geo_areas').update({latitude:lat,longitude:lng,source:'U.S. Census TIGERweb county centroid',source_year:2026}).eq('id',area.id);
+ return {lat,lng};
+}
+function distanceMiles(lat1,lon1,lat2,lon2){
+ const rad=v=>v*Math.PI/180,R=3958.7613;
+ const dLat=rad(lat2-lat1),dLon=rad(lon2-lon1);
+ const aa=Math.sin(dLat/2)**2+Math.cos(rad(lat1))*Math.cos(rad(lat2))*Math.sin(dLon/2)**2;
+ return 2*R*Math.asin(Math.sqrt(Math.min(1,aa)));
+}
+async function loadLeadAgentMatches(countyText,townText,countyArea){
+ const countyBase=String(countyArea?.county_name||countyText||'').replace(/\\s+County$/i,'').trim();
+ const pattern='%'+countyBase.replace(/[%_]/g,' ').trim()+'%';
+ const assignmentQuery=countyArea
+  ? db.from('agent_area_assignments').select('agent_id').eq('area_id',countyArea.id).eq('is_active',true).in('assignment_type',['coverage','primary'])
+  : Promise.resolve({data:[],error:null});
+ const rawQuery=db.from('real_estate_agents').select('id,name,brokerage,email,phone,service_area,service_areas,city,state,zip_codes,specialty,active').eq('active',true).ilike('service_area',pattern).limit(100);
+ const [ass,raw]=await Promise.all([assignmentQuery,rawQuery]);
+ if(ass.error)throw ass.error;
+ if(raw.error)throw raw.error;
+ const ids=[...new Set((ass.data||[]).map(x=>x.agent_id))];
+ let assigned=[];
+ if(ids.length){
+  const result=await db.from('real_estate_agents').select('id,name,brokerage,email,phone,service_area,service_areas,city,state,zip_codes,specialty,active').eq('active',true).in('id',ids);
+  if(result.error)throw result.error;
+  assigned=(result.data||[]).map(a=>({...a,__matchType:'assignment'}));
  }
- if(zip&&zip.length!==5){
-  r.style.display='grid';
-  r.innerHTML='<div class="empty">Please enter a valid five-digit ZIP code.</div>';
-  return;
+ const byId=new Map();
+ for(const a of assigned)byId.set(a.id,a);
+ for(const a of (raw.data||[]))if(!byId.has(a.id))byId.set(a.id,{...a,__matchType:'service_text'});
+ let matches=[...byId.values()];
+ if(!matches.length&&countyArea){
+  const token=normalizeLeadText(countyBase);
+  const areaAlias=[token,token+' county'];
+  const serviceResult=await db.from('real_estate_agents').select('id,name,brokerage,email,phone,service_area,service_areas,city,state,zip_codes,specialty,active').eq('active',true).overlaps('service_areas',areaAlias).limit(100);
+  if(serviceResult.error)throw serviceResult.error;
+  matches=(serviceResult.data||[]).map(a=>({...a,__matchType:'service_text'}));
  }
- const target=location||( 'ZIP '+zip );
- r.style.display='grid';
- r.innerHTML='<div class="empty">Searching the live agent directory…</div>';
- if(button){button.disabled=true;button.textContent='Searching…';}
+ if(!matches.length)return [];
+ const centroid=countyArea?await fetchCountyCentroid(countyArea).catch(err=>{console.warn('Could not get county centroid',err);return null;}):null;
+ const matchIds=matches.map(a=>a.id);
+ const {data:locs,error:locError}=await db.from('agent_locations').select('agent_id,latitude,longitude,matched_address,city,county_name,state_code,zip_code').eq('is_current',true).in('agent_id',matchIds);
+ if(locError)throw locError;
+ const locationMap=new Map();
+ for(const loc of (locs||[])){
+  if(Number.isFinite(Number(loc.latitude))&&Number.isFinite(Number(loc.longitude))){
+   const list=locationMap.get(loc.agent_id)||[];list.push(loc);locationMap.set(loc.agent_id,list);
+  }
+ }
+ matches=matches.map(a=>{
+  const locsForAgent=locationMap.get(a.id)||[];
+  let min=Infinity,nearest=null;
+  if(centroid)for(const loc of locsForAgent){
+   const d=distanceMiles(centroid.lat,centroid.lng,Number(loc.latitude),Number(loc.longitude));
+   if(d<min){min=d;nearest=loc;}
+  }
+  return {...a,__distanceMiles:Number.isFinite(min)?min:null,__officeLocation:nearest?.matched_address||nearest?.city||null};
+ });
+ matches.sort((a,b)=>{
+  const ad=a.__distanceMiles,bd=b.__distanceMiles;
+  if(ad!==null&&bd!==null)return ad-bd;
+  if(ad!==null)return -1;
+  if(bd!==null)return 1;
+  if(a.__matchType!==b.__matchType)return a.__matchType==='assignment'?-1:1;
+  return String(a.name||'').localeCompare(String(b.name||''));
+ });
+ return matches;
+}
+async function populateCountyDatalist(){
+ const list=document.getElementById('countyOptions');
  try{
-  const columns='name,brokerage,email,phone,service_area,service_areas,city,state,zip_codes,specialty';
-  let queries=[];
-  if(zip){
-   queries=[db.from('real_estate_agents').select(columns).eq('active',true).contains('zip_codes',[zip]).limit(50)];
-  }else{
-   const normalized=location.toLowerCase().replace(/\s+/g,' ').trim();
-   const withoutState=normalized.replace(/,\s*[a-z]{2}$/i,'').trim();
-   const variants=[...new Set([normalized,withoutState].filter(Boolean))];
-   const escaped=location.replace(/[%_]/g,' ').trim();
-   queries.push(db.from('real_estate_agents').select(columns).eq('active',true).ilike('city',location).limit(50));
-   queries.push(db.from('real_estate_agents').select(columns).eq('active',true).ilike('state',location).limit(50));
-   queries.push(db.from('real_estate_agents').select(columns).eq('active',true).ilike('service_area','%'+escaped+'%').limit(50));
-   for(const variant of variants){
-    queries.push(db.from('real_estate_agents').select(columns).eq('active',true).overlaps('service_areas',[variant]).limit(50));
-   }
+  const {data,error}=await db.from('geo_areas').select('name,state_code').eq('area_type','county').eq('is_active',true).order('name');
+  if(error)throw error;
+  list.innerHTML=(data||[]).map(a=>'<option value="'+esc(a.name+', '+(a.state_code||''))+'"></option><option value="'+esc(a.name)+'"></option>').join('');
+ }catch(e){console.warn('County suggestions unavailable',e);}
+}
+async function submitLeadAndFindAgents(){
+ const leadName=document.getElementById('leadName').value.trim();
+ const townCounty=document.getElementById('townCounty').value.trim();
+ const leadType=document.getElementById('leadType').value;
+ const countyUsed=document.getElementById('countyUsed').value.trim();
+ const leadSource=document.getElementById('leadSource').value;
+ const button=document.getElementById('submitLeadButton');
+ const results=document.getElementById('results');
+ if(!leadName||!townCounty||!leadType||!countyUsed||!leadSource){
+  setLeadStatus('Complete all five lead fields before searching for agents.','warn');return;
+ }
+ button.disabled=true;button.textContent='Saving lead…';
+ results.style.display='grid';results.innerHTML='<div class="empty">Saving the lead and finding territory matches…</div>';
+ try{
+  let resolved={area:null,candidates:[]};
+  try{resolved=await resolveCountyUsed(countyUsed,townCounty);}catch(e){console.warn('County matching failed',e);}
+  const payload={
+   lead_name:leadName,
+   town_or_county:townCounty,
+   lead_type:leadType,
+   county_used:countyUsed,
+   lead_source:leadSource,
+   matched_area_id:resolved.area?.id||null
+  };
+  const {error:saveError}=await db.from('leads').insert(payload);
+  if(saveError)throw saveError;
+  setLeadStatus('Lead saved successfully. Searching active agents for '+countyUsed+'. ISA identity will be stamped automatically once staff login is connected.','good');
+  if(!resolved.area){
+   results.innerHTML='<div class="results-heading"><div><strong>County needs geographic confirmation</strong><small>Lead saved · County used: '+esc(countyUsed)+'</small></div><span class="demo-note">REVIEW REQUIRED</span></div><div class="empty">'+(resolved.candidates?.length>1?'Several counties match this name. Add the state to Town or County so the correct county can be identified.':'This county is not in the current geography catalog. Add or verify it in Area Manager before searching assigned territories.')+'</div>';
+   results.style.display='grid';return;
   }
-  const results=await Promise.all(queries);
-  try{
-   const territoryMatches=await findAgentMatchesInTerritories(location,zip,columns);
-   results.push({data:territoryMatches,error:null});
-  }catch(areaError){
-   console.warn('Normalized territory lookup unavailable; retaining legacy directory results:',areaError);
-  }
-  const failed=results.find(x=>x.error);
-  if(failed)throw failed.error;
-  const seen=new Set();
-  const matches=[];
-  for(const result of results){
-   for(const a of (result.data||[])){
-    const key=String(a.id||a.email||a.name||'').toLowerCase();
-    if(!seen.has(key)){seen.add(key);matches.push(a);}
-   }
-  }
+  const matches=await loadLeadAgentMatches(countyUsed,townCounty,resolved.area);
   if(matches.length){
-   showAgentResults(matches.slice(0,12),{client:client||'Not specified',target},false);
-   const note=document.querySelector('.results-heading small');
-   if(note)note.textContent='Client: '+(client||'Not specified')+' · Target: '+target+' · '+matches.length+' matching profile(s)';
+   showAgentResults(matches.slice(0,12),{client:leadName,target:resolved.area.display_name},false);
+   const located=matches.filter(a=>a.__distanceMiles!==null).length;
+   if(located){
+    const note=document.querySelector('.results-heading small');
+    if(note)note.textContent='Lead: '+leadName+' · County used: '+resolved.area.display_name+' · Ranked by distance from county center ('+located+' located agent(s))';
+   }else{
+    const note=document.querySelector('.results-heading small');
+    if(note)note.textContent='Lead: '+leadName+' · County used: '+resolved.area.display_name+' · Territory matches shown; office/base locations still need geocoding';
+   }
   }else{
-   r.innerHTML='<div class="results-heading"><div><strong>No matching agents found</strong><small>Target: '+esc(target)+'</small></div><span class="demo-note">LIVE DIRECTORY</span></div><div class="empty">No active employee profile currently lists this location or ZIP code. Check the spelling or update the employee’s Assigned Areas in Admin.</div>';
-   r.style.display='grid';
+   results.innerHTML='<div class="results-heading"><div><strong>No active agents found for this county</strong><small>Lead: '+esc(leadName)+' · County used: '+esc(resolved.area.display_name)+'</small></div><span class="demo-note">LIVE DIRECTORY</span></div><div class="empty">No active agent currently has this county assigned or listed in their original service-area text. Check the Area Manager to review and approve the agent territory.</div>';
+   results.style.display='grid';
   }
  }catch(error){
-  console.error('Live agent directory search failed:',error);
-  r.innerHTML='<div class="results-heading"><div><strong>Directory search unavailable</strong><small>Target: '+esc(target)+'</small></div></div><div class="empty">The live database could not be queried. Please try again. If this continues, check the Supabase directory permissions.</div>';
-  r.style.display='grid';
+  console.error('Lead workflow failed:',error);
+  setLeadStatus('The lead could not be completed: '+(error.message||'Database request failed')+'. Please correct the fields and retry.','warn');
+  results.innerHTML='<div class="empty">The lead search could not be completed. The lead may or may not have been saved; check before submitting again.</div>';
+  results.style.display='grid';
  }finally{
-  if(button){button.disabled=false;button.textContent='Find Agents';}
+  button.disabled=false;button.textContent='Save Lead & Find Agents';
  }
 }
+populateCountyDatalist();
 </script>
 </body>
 </html>
