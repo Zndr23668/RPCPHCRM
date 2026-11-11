@@ -27,7 +27,7 @@ const spring={type:"spring",stiffness:420,damping:32,mass:.72};
 const pageVariants={initial:{opacity:0,y:14,scale:.992},animate:{opacity:1,y:0,scale:1,transition:{duration:.42,ease}},exit:{opacity:0,y:-8,scale:.998,transition:{duration:.22,ease:[.4,0,1,1]}}};
 
 function routeForPath(path){
- const p=path.replace(/\\/+$/,"")||"/";
+ const p=path.replace(/\/+$/,"")||"/";
  if(p==="/Admin/Users"||p==="/Admin/Users/index.html")return "users";
  if(p==="/Admin"||p==="/Admin/index.html")return "admin";
  if(p==="/Areas"||p==="/Areas/index.html")return "areas";
