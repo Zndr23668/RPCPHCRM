@@ -1,7 +1,13 @@
 {
-  "rewrites":[
-    {"source":"/Login","destination":"/"},
-    {"source":"/Login/","destination":"/"},
-    {"source":"/Login/:path*","destination":"/"}
+  "rewrites": [
+    {"source": "/Login", "destination": "/"},
+    {"source": "/Login/:path*", "destination": "/"},
+    {"source": "/Admin/Users/:path*", "destination": "/"},
+    {"source": "/Admin/:path*", "destination": "/"},
+    {"source": "/Admin", "destination": "/"},
+    {"source": "/Areas/:path*", "destination": "/"},
+    {"source": "/Areas", "destination": "/"},
+    {"source": "/DB/:path*", "destination": "/"},
+    {"source": "/DB", "destination": "/"}
   ]
 }
