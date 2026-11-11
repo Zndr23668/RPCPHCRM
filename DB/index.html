@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RPCPH CRM — Database</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--navy:#012169;--blue:#418FDE;--ink:#171b24;--muted:#788397;--line:rgba(255,255,255,.72);--glass:rgba(255,255,255,.34)}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)}
+body{min-height:100vh;background:#edf2f8 url('/luxury-building-wallpaper.svg') center/cover fixed no-repeat}
+body:before{content:"";position:fixed;inset:0;background:rgba(245,248,252,.38);pointer-events:none}
+.page{position:relative;z-index:1;min-height:100vh;padding:26px clamp(14px,3vw,42px) 40px;max-width:1800px;margin:auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:30px}
+.brand{display:flex;align-items:center;gap:12px;font-size:15px;font-weight:750;letter-spacing:-.3px}
+.brandmark{width:42px;height:42px;display:grid;place-items:center;background:#050505;color:#fff;border-radius:7px;font-size:19px}
+.brand small{display:block;margin-top:3px;font-size:9px;letter-spacing:1.6px;color:#7c8797;font-weight:700}
+.top-actions{display:flex;gap:8px;flex-wrap:wrap}
+.linkbtn,.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:39px;padding:0 14px;border-radius:8px;border:1px solid rgba(1,33,105,.15);background:rgba(255,255,255,.46);color:var(--navy);text-decoration:none;font-size:11px;font-weight:700;cursor:pointer}
+.btn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.intro{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:22px}
+.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:1.6px;color:#728097;font-weight:750}
+h1{font-size:clamp(30px,4vw,48px);line-height:1;letter-spacing:-2px;font-weight:500;margin:9px 0}
+.lead{font-size:12px;color:#6f7c90;margin:0;line-height:1.6}
+.readonly{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid rgba(1,33,105,.12);background:rgba(255,255,255,.42);border-radius:99px;color:var(--navy);font-size:10px;font-weight:750;white-space:nowrap}
+.readonly:before{content:"";width:7px;height:7px;border-radius:50%;background:#2e9462}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.stat,.panel{background:rgba(255,255,255,.29);border:1px solid rgba(255,255,255,.76);box-shadow:0 12px 36px rgba(16,36,68,.08),inset 0 1px 0 rgba(255,255,255,.85);-webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);border-radius:11px}
+.stat{padding:16px 18px;min-height:87px}
+.stat strong{display:block;font-size:28px;letter-spacing:-1px;font-weight:550}
+.stat span{display:block;color:#738096;font-size:10px;margin-top:5px}
+.panel{padding:18px;margin-bottom:14px}
+.toolbar{display:grid;grid-template-columns:minmax(220px,1.5fr) minmax(130px,.65fr) minmax(145px,.75fr) auto auto;align-items:end;gap:10px}
+.field label{display:block;margin:0 0 6px 2px;font-size:9px;color:#778398;font-weight:750;letter-spacing:1px}
+.field input,.field select{width:100%;height:40px;padding:0 12px;border-radius:7px;border:1px solid rgba(1,33,105,.14);background:rgba(255,255,255,.52);outline:none;color:#202938;font:inherit;font-size:12px}
+.field input:focus,.field select:focus{border-color:var(--blue);background:rgba(255,255,255,.82)}
+.table-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin:18px 2px 11px}
+.table-head strong{font-size:14px;font-weight:700}
+.table-head span{font-size:10px;color:#778398}
+.table-wrap{overflow:auto;border-radius:8px;border:1px solid rgba(255,255,255,.72);background:rgba(255,255,255,.20)}
+table{width:100%;min-width:1120px;border-collapse:separate;border-spacing:0;text-align:left}
+thead th{position:sticky;top:0;z-index:1;background:rgba(235,241,249,.92);color:#6c7890;font-size:9px;letter-spacing:.7px;text-transform:uppercase;font-weight:750;padding:12px 13px;border-bottom:1px solid rgba(1,33,105,.10);white-space:nowrap}
+tbody td{padding:12px 13px;border-bottom:1px solid rgba(255,255,255,.58);font-size:11px;color:#344054;vertical-align:top;max-width:260px}
+tbody tr{cursor:pointer;transition:background .16s ease}
+tbody tr:hover{background:rgba(255,255,255,.43)}
+tbody tr:last-child td{border-bottom:0}
+.name{font-weight:750;color:#202938}
+.secondary{display:block;color:#8993a3;font-size:10px;margin-top:4px}
+.area{white-space:normal;min-width:190px;line-height:1.5}
+.pill{display:inline-flex;align-items:center;padding:4px 8px;border-radius:99px;background:rgba(46,148,98,.11);color:#24764f;font-size:9px;font-weight:750}
+.pill.off{background:rgba(125,135,150,.12);color:#697386}
+.empty{padding:35px!important;text-align:center!important;color:#7c8798!important;cursor:default}
+.notice{display:none;margin-top:12px;padding:11px 13px;border-radius:8px;font-size:11px;line-height:1.5}
+.notice.show{display:block}
+.notice.info{background:rgba(65,143,222,.10);color:#244d7c;border:1px solid rgba(65,143,222,.18)}
+.notice.warn{background:rgba(189,125,35,.10);color:#79551e;border:1px solid rgba(189,125,35,.2)}
+.pager{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:13px}
+.pager-info{font-size:10px;color:#7a8597}
+.pager-actions{display:flex;gap:7px}
+.pager .btn{height:34px}
+.footnote{font-size:10px;color:#718096;line-height:1.6;margin:12px 2px 0}
+.modal{position:fixed;inset:0;z-index:5;background:rgba(9,20,40,.35);display:none;align-items:center;justify-content:center;padding:18px}
+.modal.open{display:flex}
+.dialog{width:min(680px,100%);max-height:85vh;overflow:auto;border:1px solid rgba(255,255,255,.82);border-radius:14px;background:rgba(246,249,253,.94);box-shadow:0 24px 80px rgba(8,25,55,.25);backdrop-filter:blur(24px);padding:22px}
+.dialog-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.dialog h2{font-size:22px;letter-spacing:-.7px;font-weight:600;margin:0 0 5px}
+.dialog-sub{font-size:11px;color:#788397}
+.close{border:0;background:rgba(1,33,105,.08);color:var(--navy);height:32px;width:32px;border-radius:8px;font-size:18px;cursor:pointer}
+.details{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+.detail{padding:12px;border:1px solid rgba(1,33,105,.08);border-radius:8px;background:rgba(255,255,255,.48);min-width:0}
+.detail label{display:block;font-size:9px;color:#8590a2;font-weight:750;letter-spacing:.8px;margin-bottom:6px}
+.detail div{font-size:12px;color:#283448;overflow-wrap:anywhere;line-height:1.5}
+@media(max-width:900px){.toolbar{grid-template-columns:1fr 1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.intro{align-items:flex-start;flex-direction:column}}
+@media(max-width:560px){.page{padding:17px 12px 28px}.topbar{align-items:flex-start}.brand{font-size:13px}.top-actions{justify-content:flex-end}.linkbtn{padding:0 10px}.intro{margin-bottom:17px}.stats{gap:8px}.stat{padding:13px}.stat strong{font-size:24px}.toolbar{grid-template-columns:1fr}.panel{padding:12px}.details{grid-template-columns:1fr}.readonly{font-size:9px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="page">
+<header class="topbar">
+  <div class="brand"><div class="brandmark">R.</div><div>RPCPH CRM<small>DATABASE VIEW</small></div></div>
+  <div class="top-actions"><a class="linkbtn" href="/">← Back to CRM</a><a class="linkbtn" href="/Admin/">⚙ Admin import</a></div>
+</header>
+<section class="intro">
+  <div><div class="eyebrow">Data / Directory records</div><h1>Database</h1><p class="lead">Browse the real-estate agent directory stored in Supabase. This page is read-only; records are managed through the Admin import workflow.</p></div>
+  <div class="readonly">READ ONLY · SUPABASE</div>
+</section>
+<section class="stats">
+  <div class="stat"><strong id="totalCount">—</strong><span>Total records visible to this page</span></div>
+  <div class="stat"><strong id="activeCount">—</strong><span>Active records on current result set</span></div>
+  <div class="stat"><strong id="pageCount">—</strong><span>Records on this page</span></div>
+  <div class="stat"><strong id="zipCount">—</strong><span>Records with ZIP codes on this page</span></div>
+</section>
+<section class="panel">
+  <div class="toolbar">
+    <div class="field"><label for="search">SEARCH DATABASE</label><input id="search" type="search" placeholder="Name, office, email, phone, city, ZIP…"></div>
+    <div class="field"><label for="status">STATUS</label><select id="status"><option value="all">All permitted records</option><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+    <div class="field"><label for="sort">SORT BY</label><select id="sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="name">Name A–Z</option></select></div>
+    <button class="btn primary" id="searchBtn" type="button">Search</button>
+    <button class="btn" id="refreshBtn" type="button">↻ Refresh</button>
+  </div>
+  <div id="notice" class="notice"></div>
+  <div class="table-head"><strong>Agent records</strong><span id="resultLabel">Loading database…</span></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Agent</th><th>Office / Brokerage</th><th>Email</th><th>Phone</th><th>Assigned areas</th><th>City / State</th><th>ZIP codes</th><th>Status</th><th>Created</th></tr></thead>
+      <tbody id="rows"><tr><td colspan="9" class="empty">Connecting to Supabase…</td></tr></tbody>
+    </table>
+  </div>
+  <div class="pager"><div class="pager-info" id="pagerInfo">—</div><div class="pager-actions"><button class="btn" id="prevBtn" type="button" disabled>← Previous</button><button class="btn" id="nextBtn" type="button" disabled>Next →</button><button class="btn" id="exportBtn" type="button" disabled>↓ Export page CSV</button></div></div>
+  <p class="footnote">This screen does not create, edit, or delete records. Results are limited by the read permissions configured in Supabase Row Level Security (RLS). The CSV action exports the currently displayed page only.</p>
+</section>
+</div>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+  <div class="dialog">
+    <div class="dialog-top"><div><h2 id="detailTitle">Agent details</h2><div class="dialog-sub" id="detailSub"></div></div><button class="close" id="closeModal" aria-label="Close">×</button></div>
+    <div class="details" id="details"></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL="https://pfuomojvcuwbvqtzvglb.supabase.co";
+const SUPABASE_KEY="sb_publishable__W9mPIcJIZ7QDhzbKWNm_g_IsEMgMUt";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const PAGE_SIZE=25;
+let page=0,total=0,currentRows=[];
+const $=id=>document.getElementById(id);
+function esc(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));}
+function showNotice(message,type="info"){const el=$("notice");el.textContent=message;el.className="notice show "+type;}
+function hideNotice(){$("notice").className="notice";}
+function formatDate(value){if(!value)return "—";const d=new Date(value);return Number.isNaN(d.getTime())?"—":d.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"});}
+function searchValue(){return $("search").value.trim().replace(/[^a-zA-Z0-9 @._+\-]/g," ").replace(/\s+/g," ").trim();}
+function makeQuery(){
+ let q=db.from("real_estate_agents").select("*",{count:"exact"});
+ const status=$("status").value;
+ if(status==="active")q=q.eq("active",true);
+ if(status==="inactive")q=q.eq("active",false);
+ const term=searchValue();
+ if(term){
+  const safe=term.replace(/[.]/g," ").replace(/\s+/g," ").trim();
+  const pattern="%"+safe+"%";
+  q=q.or("name.ilike."+pattern+",brokerage.ilike."+pattern+",email.ilike."+pattern+",phone.ilike."+pattern+",service_area.ilike."+pattern+",city.ilike."+pattern+",state.ilike."+pattern);
+ }
+ const sort=$("sort").value;
+ if(sort==="name")q=q.order("name",{ascending:true});
+ else q=q.order("created_at",{ascending:sort==="oldest",nullsFirst:false});
+ return q.range(page*PAGE_SIZE,(page+1)*PAGE_SIZE-1);
+}
+async function loadRows(){
+ const btn=$("searchBtn"),refresh=$("refreshBtn");
+ btn.disabled=true;refresh.disabled=true;
+ $("rows").innerHTML='<tr><td colspan="9" class="empty">Loading records…</td></tr>';
+ hideNotice();
+ try{
+  const {data,error,count}=await makeQuery();
+  if(error)throw error;
+  currentRows=data||[];total=count||0;
+  renderRows();
+ }catch(error){
+  currentRows=[];total=0;renderRows();
+  showNotice("Could not load the database: "+(error.message||"Supabase request failed")+". Check the Supabase connection and read policy.","warn");
+ }finally{btn.disabled=false;refresh.disabled=false;}
+}
+function renderRows(){
+ const body=$("rows");
+ if(!currentRows.length){
+  body.innerHTML='<tr><td colspan="9" class="empty">No records match this search, or the current Supabase read policy does not allow these rows.</td></tr>';
+ }else{
+  body.innerHTML=currentRows.map((r,i)=>{
+   const areas=Array.isArray(r.service_areas)&&r.service_areas.length?r.service_areas.join(", "):(r.service_area||"—");
+   const location=[r.city,r.state].filter(Boolean).join(", ")||"—";
+   const zips=Array.isArray(r.zip_codes)?r.zip_codes.join(", "):"—";
+   return '<tr data-index="'+i+'" tabindex="0" aria-label="View '+esc(r.name||"agent")+' details"><td><span class="name">'+esc(r.name||"Unnamed")+'</span><span class="secondary">'+esc(r.specialty||"Agent directory")+'</span></td><td>'+esc(r.brokerage||"—")+'</td><td>'+esc(r.email||"—")+'</td><td>'+esc(r.phone||"—")+'</td><td class="area">'+esc(areas)+'</td><td>'+esc(location)+'</td><td>'+esc(zips)+'</td><td><span class="pill '+(r.active?"":"off")+'">'+(r.active?"Active":"Inactive")+'</span></td><td>'+esc(formatDate(r.created_at))+'</td></tr>';
+  }).join("");
+  body.querySelectorAll("tr[data-index]").forEach(row=>{
+   const open=()=>openDetails(currentRows[Number(row.dataset.index)]);
+   row.addEventListener("click",open);
+   row.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();open();}});
+  });
+ }
+ const active=currentRows.filter(r=>r.active===true).length;
+ const withZip=currentRows.filter(r=>Array.isArray(r.zip_codes)&&r.zip_codes.length>0).length;
+ $("totalCount").textContent=total.toLocaleString();
+ $("activeCount").textContent=active.toLocaleString();
+ $("pageCount").textContent=currentRows.length.toLocaleString();
+ $("zipCount").textContent=withZip.toLocaleString();
+ $("resultLabel").textContent=total.toLocaleString()+" matching record"+(total===1?"":"s");
+ const start=total?page*PAGE_SIZE+1:0,end=Math.min((page+1)*PAGE_SIZE,total);
+ $("pagerInfo").textContent="Showing "+start+"–"+end+" of "+total.toLocaleString();
+ $("prevBtn").disabled=page===0;
+ $("nextBtn").disabled=(page+1)*PAGE_SIZE>=total;
+ $("exportBtn").disabled=!currentRows.length;
+}
+function openDetails(r){
+ if(!r)return;
+ $("detailTitle").textContent=r.name||"Unnamed agent";
+ $("detailSub").textContent=(r.brokerage||"No office listed")+" · "+(r.active?"Active":"Inactive");
+ const entries=[
+  ["Record ID",r.id],["Office / Brokerage",r.brokerage],["Email",r.email],["Phone",r.phone],
+  ["Original assigned-area text",r.service_area],["Parsed service areas",Array.isArray(r.service_areas)?r.service_areas.join(", "):""],
+  ["City",r.city],["State",r.state],["ZIP codes",Array.isArray(r.zip_codes)?r.zip_codes.join(", "):""],
+  ["Specialty",r.specialty],["Status",r.active?"Active":"Inactive"],["Created",r.created_at?new Date(r.created_at).toLocaleString():""]
+ ];
+ $("details").innerHTML=entries.map(([label,value])=>'<div class="detail"><label>'+esc(label)+'</label><div>'+esc(value||"—")+'</div></div>').join("");
+ $("modal").classList.add("open");
+}
+function closeDetails(){$("modal").classList.remove("open");}
+function csvCell(value){return '"'+String(value??"").replace(/"/g,'""')+'"';}
+function exportPage(){
+ const columns=["id","name","brokerage","email","phone","service_area","service_areas","city","state","zip_codes","specialty","active","created_at"];
+ const lines=[columns.map(csvCell).join(",")];
+ currentRows.forEach(r=>lines.push(columns.map(key=>csvCell(Array.isArray(r[key])?r[key].join("; "):r[key])).join(",")));
+ const blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="RPCPH-database-page-"+(page+1)+".csv";a.click();URL.revokeObjectURL(url);
+}
+function runSearch(){page=0;loadRows();}
+$("searchBtn").addEventListener("click",runSearch);
+$("refreshBtn").addEventListener("click",loadRows);
+$("search").addEventListener("keydown",event=>{if(event.key==="Enter")runSearch();});
+$("status").addEventListener("change",runSearch);
+$("sort").addEventListener("change",runSearch);
+$("prevBtn").addEventListener("click",()=>{if(page>0){page--;loadRows();}});
+$("nextBtn").addEventListener("click",()=>{if((page+1)*PAGE_SIZE<total){page++;loadRows();}});
+$("exportBtn").addEventListener("click",exportPage);
+$("closeModal").addEventListener("click",closeDetails);
+$("modal").addEventListener("click",event=>{if(event.target===$("modal"))closeDetails();});
+document.addEventListener("keydown",event=>{if(event.key==="Escape")closeDetails();});
+loadRows();
+</script>
+</body>
+</html>
