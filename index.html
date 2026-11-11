@@ -272,6 +272,32 @@ function mockProfiles(){
   {name:'Taylor Brooks',brokerage:'Summit Homes',specialty:'Residential sales · Local market guidance'}
  ];
 }
+async function findAgentMatchesInTerritories(location,zip,columns){
+ const term=String(location||"").trim();
+ let areaQuery=db.from('geo_areas').select('id').eq('is_active',true);
+ let aliasQuery=null;
+ if(zip){
+  areaQuery=areaQuery.eq('zip_code',zip);
+ }else if(term){
+  const safe=term.replace(/[%_(),]/g,' ').replace(/\\s+/g,' ').trim();
+  areaQuery=areaQuery.or('name.ilike.%'+safe+'%,display_name.ilike.%'+safe+'%,county_name.ilike.%'+safe+'%');
+  const normalized=term.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim().replace(/\\s+/g,' ');
+  aliasQuery=db.from('geo_area_aliases').select('area_id').eq('normalized_alias',normalized);
+ }
+ const [areaResult,aliasResult]=await Promise.all([areaQuery,aliasQuery||Promise.resolve({data:[],error:null})]);
+ if(areaResult.error)throw areaResult.error;
+ if(aliasResult.error)throw aliasResult.error;
+ const areaIds=[...new Set([...(areaResult.data||[]).map(x=>x.id),...(aliasResult.data||[]).map(x=>x.area_id)])];
+ if(!areaIds.length)return [];
+ const {data:assignmentRows,error:assignmentError}=await db.from('agent_area_assignments')
+  .select('agent_id').eq('is_active',true).in('assignment_type',['coverage','primary']).in('area_id',areaIds);
+ if(assignmentError)throw assignmentError;
+ const agentIds=[...new Set((assignmentRows||[]).map(x=>x.agent_id))];
+ if(!agentIds.length)return [];
+ const {data,error}=await db.from('real_estate_agents').select(columns).eq('active',true).in('id',agentIds).limit(50);
+ if(error)throw error;
+ return data||[];
+}
 async function findAgents(){
  const client=document.getElementById('client').value.trim();
  const location=document.getElementById('location').value.trim();
@@ -310,6 +336,12 @@ async function findAgents(){
    }
   }
   const results=await Promise.all(queries);
+  try{
+   const territoryMatches=await findAgentMatchesInTerritories(location,zip,columns);
+   results.push({data:territoryMatches,error:null});
+  }catch(areaError){
+   console.warn('Normalized territory lookup unavailable; retaining legacy directory results:',areaError);
+  }
   const failed=results.find(x=>x.error);
   if(failed)throw failed.error;
   const seen=new Set();
