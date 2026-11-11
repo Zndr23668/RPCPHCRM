@@ -297,8 +297,16 @@ async function findAgents(){
   }
   const {data,error}=await q;
   if(error) throw error;
-  if(data&&data.length){
-   showAgentResults(data.slice(0,6),{client,target},false);
+  let matches=data||[];
+  if(!zip&&location){
+   const normalized=location.toLowerCase().replace(/\\s+/g,' ').trim();
+   const areaResult=await db.from('real_estate_agents').select('name,brokerage,email,phone,service_area,service_areas,city,state,zip_codes,specialty').eq('active',true).overlaps('service_areas',[normalized]).limit(12);
+   if(areaResult.error) throw areaResult.error;
+   const seen=new Set(matches.map(a=>String(a.name||'').toLowerCase()));
+   for(const a of (areaResult.data||[])){if(!seen.has(String(a.name||'').toLowerCase()))matches.push(a);}
+  }
+  if(matches.length){
+   showAgentResults(matches.slice(0,6),{client,target},false);
   }else{
    showAgentResults(mockProfiles(),{client,target},true);
   }
