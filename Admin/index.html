@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#edf2f8">
 <title>RPCPH CRM — Admin</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--navy:#012169;--blue:#418FDE;--ink:#142238;--muted:#718096;--line:rgba(255,255,255,.72);--glass:rgba(255,255,255,.28)}
 *{box-sizing:border-box}
@@ -123,8 +124,8 @@ tbody tr:hover{background:rgba(255,255,255,.24)}
     <div id="reviewNotice" class="notice"></div>
     <div class="section-head" style="margin-top:22px"><div><h2>Employee record preview</h2><p class="helper">Original assigned-area text is preserved exactly as it appears in the sheet.</p></div><span id="previewCount" class="count">0 rows shown</span></div>
     <div class="table-wrap"><table><thead><tr><th>Name</th><th>Office</th><th>Email</th><th>Mobile / Contact</th><th>Assigned Areas — original cell</th></tr></thead><tbody id="previewBody"><tr><td colspan="5" class="empty">Upload a spreadsheet to preview employee rows.</td></tr></tbody></table></div>
-    <div class="actions"><button id="downloadBtn" class="action" type="button">Download reviewed CSV</button><button id="clearBtn" class="action" type="button">Clear file</button></div>
-    <p class="footer-note">The CSV export contains the five mapped fields and keeps the assigned-area cell unchanged. It is a review/export file, not yet a ZIP-normalized database import.</p>
+    <div class="actions"><button id="downloadBtn" class="action" type="button">Download reviewed CSV</button><button id="importBtn" class="action primary" type="button">Import to database</button><button id="clearBtn" class="action" type="button">Clear file</button></div>
+    <div id="importNotice" class="notice"></div><p class="footer-note">Import saves each employee profile to Supabase. Assigned-area text is preserved as supplied; ZIP matching will be a separate reviewed step. Existing records with the same email, or the same name when email is blank, are skipped.</p>
   </section>
 </main>
 </div>
@@ -234,6 +235,42 @@ function downloadCsv(){
  const blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8;"});
  const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="RPCPH-employee-directory-review.csv";a.click();URL.revokeObjectURL(url);
 }
+async function importToDatabase(){
+ const btn=$("importBtn");
+ if(!window.supabase?.createClient){showNotice($("importNotice"),"Database client did not load. Refresh the page and try again.","warn");return;}
+ buildRecords();
+ const missing=fields.filter(f=>mapping[f.key]==="");
+ if(missing.length){showNotice($("importNotice"),"Map all five columns before importing: "+missing.map(f=>f.label).join(", "),"warn");return;}
+ const valid=records.filter(r=>r.name);
+ if(!valid.length){showNotice($("importNotice"),"No named employee records were found.","warn");return;}
+ btn.disabled=true;btn.textContent="Importing…";
+ try{
+  const client=window.supabase.createClient("https://pfuomojvcuwbvqtzvglb.supabase.co","sb_publishable__W9mPIcJIZ7QDhzbKWNm_g_IsEMgMUt");
+  const {data:existing,error:readErr}=await client.from("real_estate_agents").select("name,email");
+  if(readErr)throw readErr;
+  const emailSet=new Set((existing||[]).map(x=>String(x.email||"").trim().toLowerCase()).filter(Boolean));
+  const nameSet=new Set((existing||[]).filter(x=>!x.email).map(x=>String(x.name||"").trim().toLowerCase()).filter(Boolean));
+  const fresh=[];
+  let skipped=0;
+  for(const r of valid){
+   const email=String(r.email||"").trim().toLowerCase(), name=String(r.name||"").trim().toLowerCase();
+   if((email&&emailSet.has(email))||(!email&&nameSet.has(name))){skipped++;continue;}
+   fresh.push({name:String(r.name).trim(),brokerage:r.office||"",email:r.email||null,phone:r.mobile||null,service_area:r.areas||null,zip_codes:[],active:true});
+   if(email)emailSet.add(email);else nameSet.add(name);
+  }
+  let imported=0;
+  for(let i=0;i<fresh.length;i+=100){
+   const {data,error}=await client.from("real_estate_agents").insert(fresh.slice(i,i+100)).select("id");
+   if(error)throw error;
+   imported+=(data||[]).length;
+  }
+  showNotice($("importNotice"),"Import complete. "+imported+" employee record(s) added; "+skipped+" duplicate(s) skipped. Assigned-area text is stored on each profile unchanged. ZIP codes have not been inferred yet.","info");
+  btn.textContent="Import complete";
+ }catch(err){
+  showNotice($("importNotice"),"Import failed: "+(err.message||"Database request error")+". No successful completion is assumed; check the directory before retrying.","warn");
+  btn.textContent="Retry import";
+ }finally{btn.disabled=false;}
+}
 function clearFile(){
  matrix=[];headers=[];records=[];mapping={};fileLabel="";
  $("file").value="";$("filename").textContent="";$("filename").style.display="none";
@@ -246,7 +283,7 @@ $("file").addEventListener("change",e=>{const f=e.target.files?.[0];if(f)parseWo
 $("drop").addEventListener("dragover",e=>{e.preventDefault();$("drop").classList.add("drag");});
 $("drop").addEventListener("dragleave",()=>$("drop").classList.remove("drag"));
 $("drop").addEventListener("drop",e=>{e.preventDefault();$("drop").classList.remove("drag");const f=e.dataTransfer.files?.[0];if(f)parseWorkbook(f);});
-$("downloadBtn").addEventListener("click",downloadCsv);
+$("downloadBtn").addEventListener("click",downloadCsv);\n$("importBtn").addEventListener("click",importToDatabase);
 $("clearBtn").addEventListener("click",clearFile);
 </script>
 </body>
