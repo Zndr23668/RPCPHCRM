@@ -77,7 +77,9 @@ tbody tr:hover{background:rgba(255,255,255,.24)}
 .footer-note{font-size:10px;color:#7c8ca1;line-height:1.6;margin-top:13px}
 @media(max-width:1050px){.layout{grid-template-columns:1fr}.side{grid-template-columns:1fr 1fr}.mapping{grid-template-columns:repeat(3,minmax(130px,1fr))}}
 @media(max-width:650px){.page{padding:16px 12px 30px}.topbar{margin-bottom:25px}.intro{display:block}.status{display:inline-block;margin-top:15px}.upload-panel,.section{padding:15px}.side{grid-template-columns:1fr}.mapping{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}.panel-head{display:block}.filetypes{display:inline-block;margin-top:10px}}
+html.auth-pending body{visibility:hidden}
 </style>
+<script>document.documentElement.classList.add("auth-pending")</script><script src="/local-auth.js"></script>
 </head>
 <body>
 <div class="page">
@@ -317,5 +319,6 @@ $("downloadBtn").addEventListener("click",downloadCsv);
 $("importBtn").addEventListener("click",importToDatabase);
 $("clearBtn").addEventListener("click",clearFile);
 </script>
+<script>RPCPHAuth.requireAuth(["admin","superadmin"]).catch(()=>location.replace("/Login/"));</script>
 </body>
 </html>
