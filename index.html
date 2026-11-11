@@ -232,7 +232,7 @@ main{
 body:not(.authenticated) .shell{transform:scale(1.035);opacity:.18;filter:blur(13px);pointer-events:none}
 .auth-overlay{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;overflow:auto;padding:24px;background:#edf2f8 url('/luxury-building-wallpaper.svg') center/cover no-repeat;opacity:1;visibility:visible;transition:opacity 700ms ease,visibility 0s linear 0s}
 .auth-overlay-shade{position:absolute;inset:0;background:linear-gradient(120deg,rgba(239,245,252,.78),rgba(233,241,250,.42) 52%,rgba(235,240,248,.72));backdrop-filter:saturate(115%)}
-.auth-panel{position:relative;width:min(430px,100%);padding:36px;border:1px solid rgba(255,255,255,.86);border-radius:24px;background:rgba(255,255,255,.55);backdrop-filter:blur(28px) saturate(160%);-webkit-backdrop-filter:blur(28px) saturate(160%);box-shadow:0 24px 76px rgba(20,40,70,.16),inset 0 1px rgba(255,255,255,.9);transform:translateY(0) scale(1);transition:transform 760ms cubic-bezier(.18,.78,.22,1),opacity 560ms ease,filter 560ms ease}
+.auth-panel{display:block;grid-template-columns:none;gap:0;position:relative;width:min(430px,100%);padding:36px;border:1px solid rgba(255,255,255,.86);border-radius:24px;background:rgba(255,255,255,.55);backdrop-filter:blur(28px) saturate(160%);-webkit-backdrop-filter:blur(28px) saturate(160%);box-shadow:0 24px 76px rgba(20,40,70,.16),inset 0 1px rgba(255,255,255,.9);transform:translateY(0) scale(1);transition:transform 760ms cubic-bezier(.18,.78,.22,1),opacity 560ms ease,filter 560ms ease}
 .auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:34px}.auth-mark{width:46px;height:46px;border-radius:13px;background:#012169;color:#fff;display:grid;place-items:center;font-size:19px;font-weight:800}.auth-brand strong{display:block;font-size:15px;color:#142238}.auth-brand small{display:block;margin-top:3px;color:#718096;font-size:9px;letter-spacing:1.7px}
 .auth-eyebrow{font-size:10px;letter-spacing:1.8px;font-weight:800;color:#6480a4}.auth-panel h1{margin:9px 0 8px;color:#142238;font-size:34px;letter-spacing:-1.5px;font-weight:650}.auth-description{margin:0 0 27px;color:#718096;font-size:13px;line-height:1.6}
 .auth-panel label{display:block;margin-bottom:8px;color:#52647c;font-size:10px;font-weight:800;letter-spacing:1px}.auth-panel input{width:100%;height:52px;padding:0 15px;border:1px solid rgba(1,33,105,.17);border-radius:11px;outline:none;background:rgba(255,255,255,.78);color:#142238;font-size:15px}.auth-panel input:focus{border-color:#418FDE;box-shadow:0 0 0 3px rgba(65,143,222,.13)}
@@ -707,6 +707,7 @@ if(signOut)signOut.addEventListener("click",async()=>{
   RPCPHAuth.clear();
   window.RPCPH_CURRENT_USER=null;
   document.body.classList.remove("authenticated");
+  document.getElementById("authOverlay").setAttribute("aria-hidden","false");
   authKey.value="";
   authStatus.textContent="You have signed out.";
   authStatus.className="auth-status show good";
