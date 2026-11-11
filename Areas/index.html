@@ -236,6 +236,14 @@ function candidatesFor(item){
   matches=areas.filter(a=>norm(a.name).replace(/\s+county$/,"")===stripped);
  }
  if(!matches.length){
+  const fuzzyAliases=aliases
+   .map(alias=>({alias,d:levenshtein(key,alias.normalized_alias)}))
+   .filter(x=>x.d<=2&&x.alias.normalized_alias.length>=Math.max(4,key.length-2))
+   .sort((x,y)=>x.d-y.d);
+  const fuzzyIds=[...new Set(fuzzyAliases.slice(0,12).map(x=>x.alias.area_id))];
+  matches=fuzzyIds.map(id=>areas.find(x=>x.id===id)).filter(Boolean);
+ }
+ if(!matches.length){
   const scored=areas.map(a=>({a,d:Math.min(levenshtein(key,norm(a.name)),levenshtein(key,norm(a.display_name)))})).filter(x=>x.d<=2).sort((x,y)=>x.d-y.d);
   matches=scored.slice(0,5).map(x=>x.a);
  }
@@ -447,7 +455,7 @@ async function saveLocation(){
   }
   let zipId=null;
   if(g.zip){
-   zipId=await upsertGeoArea({area_key:"zip:"+g.zip,geoid:g.zctaGeoid||null,area_type:"zip",name:g.zip,display_name:"ZIP "+g.zip+", "+abbr,state_name:g.stateName,state_code:abbr,state_fips:stateFips,county_name:g.countyName,county_fips:countyFips,zip_code:g.zip,latitude:g.lat,longitude:g.lng,source:"ZIP returned for matched address by U.S. Census Geocoder",source_year:2026});
+   zipId=await upsertGeoArea({area_key:"zip:"+g.zip,geoid:g.zctaGeoid||null,area_type:"zip",name:g.zip,display_name:"ZIP "+g.zip,state_name:null,state_code:null,state_fips:null,county_name:null,county_fips:null,zip_code:g.zip,latitude:g.lat,longitude:g.lng,source:"ZIP returned for matched address by U.S. Census Geocoder; address-level mapping only",source_year:2026});
   }
   await upsertRelation(stateId,countyId);
   if(placeId)await upsertRelation(countyId,placeId);
