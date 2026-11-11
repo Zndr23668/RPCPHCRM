@@ -289,8 +289,19 @@ async function findAgentMatchesInTerritories(location,zip,columns){
  if(aliasResult.error)throw aliasResult.error;
  const areaIds=[...new Set([...(areaResult.data||[]).map(x=>x.id),...(aliasResult.data||[]).map(x=>x.area_id)])];
  if(!areaIds.length)return [];
+ const [childrenResult,parentsResult]=await Promise.all([
+  db.from('geo_area_relationships').select('child_area_id').in('parent_area_id',areaIds),
+  db.from('geo_area_relationships').select('parent_area_id').in('child_area_id',areaIds)
+ ]);
+ if(childrenResult.error)throw childrenResult.error;
+ if(parentsResult.error)throw parentsResult.error;
+ const expandedIds=[...new Set([
+  ...areaIds,
+  ...(childrenResult.data||[]).map(x=>x.child_area_id),
+  ...(parentsResult.data||[]).map(x=>x.parent_area_id)
+ ])];
  const {data:assignmentRows,error:assignmentError}=await db.from('agent_area_assignments')
-  .select('agent_id').eq('is_active',true).in('assignment_type',['coverage','primary']).in('area_id',areaIds);
+  .select('agent_id').eq('is_active',true).in('assignment_type',['coverage','primary']).in('area_id',expandedIds);
  if(assignmentError)throw assignmentError;
  const agentIds=[...new Set((assignmentRows||[]).map(x=>x.agent_id))];
  if(!agentIds.length)return [];
