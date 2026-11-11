@@ -358,22 +358,22 @@ function setLeadStatus(message,type="info"){
  el.className='lead-status show '+type;
 }
 function normalizeLeadText(v){
- return String(v||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim().replace(/\\s+/g,' ');
+ return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim().replace(/\s+/g,' ');
 }
 function inferLeadState(value){
  const s=String(value||'').toLowerCase();
  const codes=['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC'];
- const codeMatch=s.match(/(?:^|[,\\s])([a-z]{2})(?:$|[,\\s])/i);
+ const codeMatch=s.match(/(?:^|[,\s])([a-z]{2})(?:$|[,\s])/i);
  if(codeMatch&&codes.includes(codeMatch[1].toUpperCase()))return codeMatch[1].toUpperCase();
- if(/\\b(north carolina|raleigh|durham|chapel hill|cary|apex|wake forest|johnston|harnett|alamance|chatham|morrisville|holly springs|fuquay varina|garner|clayton|knightdale|wendell|zebulon|pittsboro|sanford|mebane|graham|franklinton|youngsville|creedmoor|oxford)\\b/i.test(s))return 'NC';
- if(/\\b(california|los angeles|irvine|beverly hills|san diego|santa monica|san francisco)\\b/i.test(s))return 'CA';
- if(/\\b(texas|austin|round rock)\\b/i.test(s))return 'TX';
- if(/\\b(washington|seattle)\\b/i.test(s))return 'WA';
+ if(/\b(north carolina|raleigh|durham|chapel hill|cary|apex|wake forest|johnston|harnett|alamance|chatham|morrisville|holly springs|fuquay varina|garner|clayton|knightdale|wendell|zebulon|pittsboro|sanford|mebane|graham|franklinton|youngsville|creedmoor|oxford)\b/i.test(s))return 'NC';
+ if(/\b(california|los angeles|irvine|beverly hills|san diego|santa monica|san francisco)\b/i.test(s))return 'CA';
+ if(/\b(texas|austin|round rock)\b/i.test(s))return 'TX';
+ if(/\b(washington|seattle)\b/i.test(s))return 'WA';
  return null;
 }
 async function resolveCountyUsed(countyText,townText){
- const countyClean=String(countyText||'').trim().replace(/[,\\s]+[A-Z]{2}$/i,'').trim();
- const norm=normalizeLeadText(countyClean).replace(/\\s+county$/,'').trim();
+ const countyClean=String(countyText||'').trim().replace(/[,\s]+[A-Z]{2}$/i,'').trim();
+ const norm=normalizeLeadText(countyClean).replace(/\s+county$/,'').trim();
  if(!norm)return {area:null,candidates:[]};
  const stateCode=inferLeadState(townText+' '+countyText);
  const [exact,alias]=await Promise.all([
@@ -384,8 +384,8 @@ async function resolveCountyUsed(countyText,townText){
  if(alias.error)throw alias.error;
  const aliasIds=[...new Set((alias.data||[]).map(x=>x.area_id))];
  const matched=(exact.data||[]).filter(a=>{
-  const name=normalizeLeadText(a.name).replace(/\\s+county$/,'');
-  const county=normalizeLeadText(a.county_name||'').replace(/\\s+county$/,'');
+  const name=normalizeLeadText(a.name).replace(/\s+county$/,'');
+  const county=normalizeLeadText(a.county_name||'').replace(/\s+county$/,'');
   return name===norm||county===norm||aliasIds.includes(a.id);
  });
  const filtered=stateCode?matched.filter(a=>a.state_code===stateCode):matched;
@@ -415,7 +415,7 @@ function distanceMiles(lat1,lon1,lat2,lon2){
  return 2*R*Math.asin(Math.sqrt(Math.min(1,aa)));
 }
 async function loadLeadAgentMatches(countyText,townText,countyArea){
- const countyBase=String(countyArea?.county_name||countyText||'').replace(/\\s+County$/i,'').trim();
+ const countyBase=String(countyArea?.county_name||countyText||'').replace(/\s+County$/i,'').trim();
  const pattern='%'+countyBase.replace(/[%_]/g,' ').trim()+'%';
  const assignmentQuery=countyArea
   ? db.from('agent_area_assignments').select('agent_id').eq('area_id',countyArea.id).eq('is_active',true).in('assignment_type',['coverage','primary'])
