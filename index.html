@@ -225,7 +225,10 @@ main{
 @media(max-width:650px){.lead-grid{grid-template-columns:1fr}.lead-workflow .search-title{align-items:flex-start;flex-direction:column}.lead-workflow .search-title h2{font-size:23px}.isa-stamp{white-space:normal}.lead-actions{align-items:stretch;flex-direction:column}.lead-actions .button{width:100%;min-width:0}.lead-helper{order:1}}
 
 </style>
+html.auth-pending body{visibility:hidden}
 
+<script>document.documentElement.classList.add("auth-pending")</script>
+<script src="/local-auth.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -249,7 +252,7 @@ main{
  <div class="field"><label for="leadType">LEAD TYPE</label><select id="leadType"><option value="">Select lead type</option><option value="buyer">Buyer</option><option value="seller">Seller</option><option value="investor">Investor</option><option value="land">Land</option></select></div>
  <div class="field"><label for="countyUsed">COUNTY USED · CLIENT'S TARGET AREA</label><input id="countyUsed" list="countyOptions" autocomplete="off" placeholder="County the client is looking in"><datalist id="countyOptions"></datalist></div>
  <div class="field"><label for="leadSource">LEAD SOURCE</label><select id="leadSource"><option value="">Select lead source</option><option>MVIP New Prospect</option><option>MVIP BLA</option><option>MVIP Prio CB</option><option>Rocket Mortgage</option><option>Website</option><option>Internet Call</option><option>Cold Call</option><option>Other</option></select></div>
- <div class="field isa-field"><label>ISA RECORD STAMP</label><div class="isa-placeholder"><span class="isa-dot"></span>Will be filled automatically from employee login</div></div>
+ <div class="field isa-field"><label>ISA RECORD STAMP</label><div class="isa-placeholder"><span class="isa-dot"></span><span id="isaStamp">Stamping from local ID KEY login…</span></div></div>
 </div>
 <div class="lead-actions">
  <div class="lead-helper">Agent matching is based on <b>County used</b>, not the caller's Town or County field.</div>
@@ -583,9 +586,9 @@ async function submitLeadAndFindAgents(){
    lead_source:leadSource,
    matched_area_id:resolved.area?.id||null
   };
-  const {error:saveError}=await db.from('leads').insert(payload);
-  if(saveError)throw saveError;
-  setLeadStatus('Lead saved successfully. Searching active agents for '+countyUsed+'. ISA identity will be stamped automatically once staff login is connected.','good');
+  const saved=await RPCPHAuth.api("create_lead",{lead_name:leadName,town_or_county:townCounty,lead_type:leadType,county_used:countyUsed,lead_source:leadSource,matched_area_id:resolved.area?.id||null});
+  if(!saved.lead?.id)throw new Error("Lead save was not confirmed");
+  setLeadStatus("Lead saved and stamped to "+saved.lead.isa_name+". Searching active agents for "+countyUsed+".","good");
   if(!resolved.area){
    results.innerHTML='<div class="results-heading"><div><strong>County needs geographic confirmation</strong><small>Lead saved · County used: '+esc(countyUsed)+'</small></div><span class="demo-note">REVIEW REQUIRED</span></div><div class="empty">'+(resolved.candidates?.length>1?'Several counties match this name. Add the state to Town or County so the correct county can be identified.':'This county is not in the current geography catalog. Add or verify it in Area Manager before searching assigned territories.')+'</div>';
    results.style.display='grid';return;
@@ -616,7 +619,7 @@ async function submitLeadAndFindAgents(){
   button.disabled=false;button.textContent='Save Lead & Find Agents';
  }
 }
-populateCountyDatalist();
+(async()=>{const user=await RPCPHAuth.requireAuth();if(!user)return;const stamp=document.getElementById("isaStamp");if(stamp)stamp.textContent=user.display_name+" · "+user.role;const avatar=document.querySelector(".avatar");if(avatar)avatar.textContent=(user.display_name||"U").trim().split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase();populateCountyDatalist();})().catch(error=>{console.error("Local login check failed",error);location.replace("/Login/");});
 </script>
 </body>
 </html>
