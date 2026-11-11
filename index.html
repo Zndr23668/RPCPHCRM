@@ -244,69 +244,21 @@ body.authenticated .auth-panel{transform:translateY(-18px) scale(.94);opacity:0;
 @media(prefers-reduced-motion:reduce){.shell,.auth-overlay,.auth-panel,.auth-panel button{transition:none!important}body:not(.authenticated) .shell{transform:none;filter:none}}
 </style>
 <style>
-/* Cinematic POV portal transition — accelerated with GPU-friendly transforms */
-.auth-transition{position:fixed;inset:0;z-index:10001;overflow:hidden;pointer-events:none;visibility:hidden;opacity:0;perspective:1200px}
-.auth-transition:before{content:"";position:absolute;left:50%;top:47%;width:110vmax;height:110vmax;border-radius:50%;transform:translate(-50%,-50%) scale(.025) rotate(-28deg);opacity:0;background:
-  radial-gradient(circle,rgba(255,255,255,.98) 0%,rgba(218,239,255,.96) 4%,rgba(65,143,222,.72) 11%,rgba(1,33,105,.27) 23%,transparent 59%),
-  conic-gradient(from 12deg,transparent 0 9deg,rgba(255,255,255,.55) 10deg 11deg,transparent 12deg 29deg,rgba(190,224,255,.45) 30deg 31deg,transparent 32deg 58deg,rgba(255,255,255,.4) 59deg 60deg,transparent 61deg 88deg,rgba(190,224,255,.45) 89deg 90deg,transparent 91deg 119deg,rgba(255,255,255,.5) 120deg 121deg,transparent 122deg 149deg,rgba(190,224,255,.42) 150deg 151deg,transparent 152deg 179deg,rgba(255,255,255,.48) 180deg 181deg,transparent 182deg 209deg,rgba(190,224,255,.45) 210deg 211deg,transparent 212deg 239deg,rgba(255,255,255,.42) 240deg 241deg,transparent 242deg 269deg,rgba(190,224,255,.44) 270deg 271deg,transparent 272deg 299deg,rgba(255,255,255,.5) 300deg 301deg,transparent 302deg 329deg,rgba(190,224,255,.42) 330deg 331deg,transparent 332deg 359deg);
-filter:blur(1px);will-change:transform,opacity}
-.auth-transition:after{content:"";position:absolute;top:-35%;left:-45%;width:24vw;min-width:140px;height:170%;transform:translateX(-150vw) skewX(-19deg);opacity:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.28) 24%,rgba(255,255,255,.96) 48%,rgba(151,205,255,.6) 62%,transparent);filter:blur(13px);will-change:transform,opacity}
-body.auth-entering .auth-transition{visibility:visible;opacity:1}
-body.auth-entering .auth-transition:before{animation:portal-starburst 1.28s cubic-bezier(.16,1,.3,1) both}
-body.auth-entering .auth-transition:after{animation:portal-light-sweep 1.02s .18s cubic-bezier(.2,.72,.18,1) both}
-body.auth-entering .shell{animation:workspace-pov-arrival 1.42s .04s cubic-bezier(.16,1,.3,1) both;pointer-events:none}
-body.auth-entering .auth-overlay{animation:signin-layer-dissolve 1.12s .08s cubic-bezier(.65,0,.25,1) both}
-body.auth-entering .auth-panel{transform-origin:50% 48%;animation:signin-card-launch .88s .04s cubic-bezier(.18,.9,.24,1) both}
-body.auth-entering .auth-overlay-shade{animation:signin-light-flash .72s .04s ease-out both}
-
-@keyframes portal-starburst{
-  0%{transform:translate(-50%,-50%) scale(.025) rotate(-28deg);opacity:0}
-  20%{opacity:1}
-  62%{transform:translate(-50%,-50%) scale(1.9) rotate(22deg);opacity:.92}
-  100%{transform:translate(-50%,-50%) scale(3.4) rotate(54deg);opacity:0}
-}
-@keyframes portal-light-sweep{
-  0%{transform:translateX(-150vw) skewX(-19deg);opacity:0}
-  18%{opacity:.95}
-  72%{opacity:.75}
-  100%{transform:translateX(230vw) skewX(-19deg);opacity:0}
-}
-@keyframes workspace-pov-arrival{
-  0%{transform:perspective(1500px) translate3d(0,42px,-420px) scale(.72) rotateX(9deg);opacity:.08;filter:blur(22px) brightness(1.5)}
-  46%{transform:perspective(1500px) translate3d(0,-9px,90px) scale(1.075) rotateX(-1deg);opacity:1;filter:blur(2px) brightness(1.18)}
-  72%{transform:perspective(1500px) translate3d(0,0,0) scale(.988) rotateX(0);opacity:1;filter:blur(0) brightness(1.035)}
-  100%{transform:perspective(1500px) translate3d(0,0,0) scale(1) rotateX(0);opacity:1;filter:blur(0) brightness(1)}
-}
-@keyframes signin-card-launch{
-  0%{transform:perspective(900px) translate3d(0,0,0) scale(1) rotateX(0);opacity:1;filter:blur(0)}
-  36%{transform:perspective(900px) translate3d(0,-4px,80px) scale(1.12) rotateX(2deg);opacity:1;filter:blur(0)}
-  100%{transform:perspective(900px) translate3d(0,-18px,240px) scale(1.52) rotateX(7deg);opacity:0;filter:blur(18px)}
-}
-@keyframes signin-layer-dissolve{
-  0%{opacity:1;filter:brightness(1) saturate(1)}
-  38%{opacity:1;filter:brightness(1.16) saturate(1.18)}
-  100%{opacity:0;filter:brightness(1.5) saturate(1.25)}
-}
-@keyframes signin-light-flash{
-  0%{opacity:1}
-  35%{opacity:.95}
-  100%{opacity:0}
-}
-
-/* Reverse camera pull-back when staff sign out. */
-body.auth-exiting .shell{animation:workspace-pov-exit .82s cubic-bezier(.7,0,.3,1) both}
-body.auth-exiting .auth-overlay{animation:signin-layer-return .82s cubic-bezier(.16,1,.3,1) both}
-body.auth-exiting .auth-panel{animation:signin-card-return .82s .08s cubic-bezier(.16,1,.3,1) both}
-@keyframes workspace-pov-exit{
-  0%{transform:perspective(1400px) translate3d(0,0,0) scale(1);opacity:1;filter:blur(0)}
-  100%{transform:perspective(1400px) translate3d(0,34px,-260px) scale(.88);opacity:.16;filter:blur(12px)}
-}
-@keyframes signin-layer-return{0%{opacity:0}100%{opacity:1}}
-@keyframes signin-card-return{0%{transform:translateY(-18px) scale(.94);opacity:0;filter:blur(12px)}100%{transform:translateY(0) scale(1);opacity:1;filter:blur(0)}}
-@media(prefers-reduced-motion:reduce){
- .auth-transition,body.auth-entering .shell,body.auth-entering .auth-overlay,body.auth-entering .auth-panel,body.auth-entering .auth-overlay-shade,body.auth-exiting .shell,body.auth-exiting .auth-overlay,body.auth-exiting .auth-panel{animation:none!important}
- .auth-transition{display:none}
-}
+/* Original restrained single-page sign-in reveal */
+.shell{transform:scale(1);transform-origin:50% 50%;opacity:1;filter:blur(0);transition:transform 900ms cubic-bezier(.2,.8,.2,1),opacity 650ms ease,filter 750ms ease;will-change:transform,opacity,filter}
+body:not(.authenticated) .shell{transform:scale(1.035);opacity:.18;filter:blur(13px);pointer-events:none}
+.auth-overlay{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;overflow:auto;padding:24px;background:#edf2f8 url('/luxury-building-wallpaper.svg') center/cover no-repeat;opacity:1;visibility:visible;transition:opacity 700ms ease,visibility 0s linear 0s}
+.auth-overlay-shade{position:absolute;inset:0;background:linear-gradient(120deg,rgba(239,245,253,.78),rgba(233,241,250,.42) 52%,rgba(235,240,248,.72));backdrop-filter:saturate(115%)}
+.auth-panel{display:block;grid-template-columns:none;gap:0;position:relative;width:min(430px,100%);padding:36px;border:1px solid rgba(255,255,255,.86);border-radius:24px;background:rgba(255,255,255,.55);backdrop-filter:blur(28px) saturate(160%);-webkit-backdrop-filter:blur(28px) saturate(160%);box-shadow:0 24px 76px rgba(20,40,70,.16),inset 0 1px rgba(255,255,255,.9);transform:translateY(0) scale(1);transition:transform 760ms cubic-bezier(.18,.78,.22,1),opacity 560ms ease,filter 560ms ease}
+.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:34px}.auth-mark{width:46px;height:46px;border-radius:13px;background:#012169;color:#fff;display:grid;place-items:center;font-size:19px;font-weight:800}.auth-brand strong{display:block;font-size:15px;color:#142238}.auth-brand small{display:block;margin-top:3px;color:#718096;font-size:9px;letter-spacing:1.7px}
+.auth-eyebrow{font-size:10px;letter-spacing:1.8px;font-weight:800;color:#6480a4}.auth-panel h1{margin:9px 0 8px;color:#142238;font-size:34px;letter-spacing:-1.5px;font-weight:650}.auth-description{margin:0 0 27px;color:#718096;font-size:13px;line-height:1.6}
+.auth-panel label{display:block;margin-bottom:8px;color:#52647c;font-size:10px;font-weight:800;letter-spacing:1px}.auth-panel input{width:100%;height:52px;padding:0 15px;border:1px solid rgba(1,33,105,.17);border-radius:11px;outline:none;background:rgba(255,255,255,.78);color:#142238;font-size:15px}.auth-panel input:focus{border-color:#418FDE;box-shadow:0 0 0 3px rgba(65,143,222,.13)}
+.auth-panel button{width:100%;height:50px;margin-top:17px;border:0;border-radius:11px;background:#012169;color:#fff;font-weight:750;cursor:pointer;transition:transform 180ms ease,background 180ms ease}.auth-panel button:hover{background:#07327f;transform:translateY(-1px)}.auth-panel button:disabled{opacity:.62;cursor:wait;transform:none}
+.auth-status{display:none;margin-top:14px;padding:11px 12px;border-radius:9px;font-size:11px;line-height:1.5}.auth-status.show{display:block}.auth-status.error{background:#fff0ef;color:#9b3830}.auth-status.good{background:#eaf7f0;color:#26734e}
+body.authenticated .auth-overlay{opacity:0;visibility:hidden;pointer-events:none;transition:opacity 700ms ease,visibility 0s linear 700ms}
+body.authenticated .auth-panel{transform:translateY(-18px) scale(.94);opacity:0;filter:blur(12px)}
+@media(max-width:520px){.auth-overlay{padding:17px}.auth-panel{padding:27px 23px;border-radius:20px}}
+@media(prefers-reduced-motion:reduce){.shell,.auth-overlay,.auth-panel,.auth-panel button{transition:none!important}body:not(.authenticated) .shell{transform:none;filter:none}}
 
 .signout{border:1px solid rgba(1,33,105,.16);background:rgba(255,255,255,.52);border-radius:7px;padding:8px 10px;color:#012169;font-size:10px;font-weight:750;cursor:pointer}</style>
 <script src="/local-auth.js"></script>
@@ -329,7 +281,6 @@ body.auth-exiting .auth-panel{animation:signin-card-return .82s .08s cubic-bezie
     <div class="auth-status" id="authStatus" role="status" aria-live="polite"></div>
   </main>
 </div>
-<div class="auth-transition" id="authTransition" aria-hidden="true"></div>
 
 <div class="shell">
 <aside>
@@ -725,13 +676,8 @@ function setSignedInUser(user){
   if(stamp)stamp.textContent=user.display_name+" · "+user.role;
   const avatar=document.querySelector(".avatar");
   if(avatar)avatar.textContent=(user.display_name||"U").trim().split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase();
-  document.body.classList.remove("auth-exiting");
-  document.body.classList.add("auth-entering");
+  document.body.classList.add("authenticated");
   document.getElementById("authOverlay").setAttribute("aria-hidden","true");
-  window.setTimeout(()=>{
-    document.body.classList.add("authenticated");
-    document.body.classList.remove("auth-entering");
-  },1420);
   populateCountyDatalist();
 }
 function nextDestination(){
@@ -740,7 +686,7 @@ function nextDestination(){
 }
 function continueToNextPage(){
   const next=nextDestination();
-  if(next)window.setTimeout(()=>window.location.replace(next),1510);
+  if(next)window.setTimeout(()=>window.location.replace(next),760);
 }
 const authForm=document.getElementById("authLoginForm");
 const authButton=document.getElementById("authLoginButton");
@@ -777,17 +723,13 @@ if(signOut)signOut.addEventListener("click",async()=>{
   try{await RPCPHAuth.api("logout")}catch{}
   RPCPHAuth.clear();
   window.RPCPH_CURRENT_USER=null;
-  document.body.classList.add("auth-exiting");
   document.body.classList.remove("authenticated");
   document.getElementById("authOverlay").setAttribute("aria-hidden","false");
   authKey.value="";
   authStatus.textContent="You have signed out.";
   authStatus.className="auth-status show good";
-  window.setTimeout(()=>{
-    document.body.classList.remove("auth-exiting");
-    authKey.focus();
-    signOut.disabled=false;
-  },850);
+  authKey.focus();
+  signOut.disabled=false;
 });
 (async()=>{
   if(!RPCPHAuth.token())return;
