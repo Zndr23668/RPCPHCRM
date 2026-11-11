@@ -225,8 +225,7 @@ main{
 @media(max-width:650px){.lead-grid{grid-template-columns:1fr}.lead-workflow .search-title{align-items:flex-start;flex-direction:column}.lead-workflow .search-title h2{font-size:23px}.isa-stamp{white-space:normal}.lead-actions{align-items:stretch;flex-direction:column}.lead-actions .button{width:100%;min-width:0}.lead-helper{order:1}}
 
 </style>
-html.auth-pending body{visibility:hidden}
-
+<style>html.auth-pending body{visibility:hidden}.signout{border:1px solid rgba(1,33,105,.16);background:rgba(255,255,255,.52);border-radius:7px;padding:8px 10px;color:#012169;font-size:10px;font-weight:750;cursor:pointer}</style>
 <script>document.documentElement.classList.add("auth-pending")</script>
 <script src="/local-auth.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
