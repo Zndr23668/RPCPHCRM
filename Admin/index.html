@@ -178,12 +178,41 @@ function buildRecords(){
  }).filter(r=>fields.some(f=>r[f.key]!== ""));
 }
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-const localityZipMap={\n "beverly hills":["90210"],\n "west hollywood":["90069"],\n "santa monica":["90401"],\n "los angeles":[]\n};\nconst stateTokens=new Set(["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"]);\nfunction parseAssignedAreas(value){\n const raw=String(value??"").trim(); if(!raw)return {locations:[],zips:[],review:[]};\n const zips=[...raw.matchAll(/\\b\\d{5}\\b/g)].map(m=>m[0]);\n let parts=raw.replace(/\\b\\d{5}(-\\d{4})?\\b/g," ").split(/[\\n,;|•]+|\\s+\\/\\s+/);
+const stateTokens=new Set(["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"]);
+function parseAssignedAreas(value){
+ const original=String(value??"").trim();
+ if(!original)return {locations:[],zips:[],review:[]};
+ const zips=[...original.matchAll(/\b\d{5}\b/g)].map(m=>m[0]);
+ const withoutZips=original
+  .replace(/\b\d{5}(?:-\d{4})?\b/g," ")
+  .replace(/\r/g,"")
+  .replace(/\n\s*Preference\/Focus:.*$/is,"");
+ const parts=withoutZips.split(/[\n,;|•/]+|\s+and\s+|\s*&\s*/i);
+ const locations=[];
+ const review=[];
+ for(let part of parts){
+  let clean=String(part||"").trim().replace(/^[\s.]+|[\s.]+$/g,"");
+  if(!clean)continue;
+  if(stateTokens.has(clean.toUpperCase()))continue;
+  clean=clean.replace(/\s*,\s*[A-Z]{2}$/i,"").trim();
+  if(!clean)continue;
+  const lower=clean.toLowerCase().replace(/\s+/g," ");
+  if(!locations.some(x=>x.toLowerCase()===lower))locations.push(clean);
+  if(/surrounding|communities|thinking about joining|training/i.test(clean))review.push(clean);
+ }
+ return {locations,zips:[...new Set(zips)],review:[...new Set(review)]};
+}
+function renderPreview(){
  const body=$("previewBody");
  const shown=records.slice(0,15);
- if(!records.length){body.innerHTML='<tr><td colspan="5" class="empty">No employee rows found. Check the column mapping or selected worksheet.</td></tr>';}
- else{
-  body.innerHTML=shown.map(r=>{const a=parseAssignedAreas(r.areas);return '<tr><td><b>'+esc(r.name||"—")+'</b></td><td>'+esc(r.office||"—")+'</td><td>'+esc(r.email||"—")+'</td><td>'+esc(r.mobile||"—")+'</td><td class="area">'+esc(r.areas||"—")+'</td><td class="area">'+esc(a.locations.join(", ")||"—")+'</td><td>'+esc(a.zips.join(", ")||"—")+'</td><td>'+esc(a.review.length?a.review.join("; "):"Ready")+(a.review.length?" ⚠":" ✓")+'</td></tr>';}).join("");
+ if(!records.length){
+  body.innerHTML='<tr><td colspan="8" class="empty">No employee rows found. Check the column mapping or selected worksheet.</td></tr>';
+ }else{
+  body.innerHTML=shown.map(r=>{
+   const a=parseAssignedAreas(r.areas);
+   const reviewText=a.review.length?a.review.join("; "):"Ready";
+   return '<tr><td><b>'+esc(r.name||"—")+'</b></td><td>'+esc(r.office||"—")+'</td><td>'+esc(r.email||"—")+'</td><td>'+esc(r.mobile||"—")+'</td><td class="area">'+esc(r.areas||"—")+'</td><td class="area">'+esc(a.locations.join(", ")||"—")+'</td><td>'+esc(a.zips.join(", ")||"—")+'</td><td>'+esc(reviewText)+(a.review.length?" ⚠":" ✓")+'</td></tr>';
+  }).join("");
  }
  const named=records.filter(r=>r.name).length;
  const area=records.filter(r=>r.areas).length;
@@ -195,8 +224,8 @@ const localityZipMap={\n "beverly hills":["90210"],\n "west hollywood":["90069"]
  $("previewCount").textContent="Showing "+Math.min(records.length,15)+" of "+records.length;
  const missing=fields.filter(f=>mapping[f.key]==="").map(f=>f.label);
  if(missing.length)showNotice($("reviewNotice"),"Map these required fields before exporting: "+missing.join(", ")+".","warn");
- else if(issues)showNotice($("reviewNotice"),issues+" row(s) are missing a name or assigned area and should be checked.","warn");
- else showNotice($("reviewNotice"),issues?issues+" row(s) need location review. Only explicit ZIPs and the small verified locality list are assigned; ambiguous areas are not guessed.":"All five fields are mapped. Original area text is preserved; normalized locations and ZIP codes are ready.",issues?"warn":"info");
+ else if(issues)showNotice($("reviewNotice"),issues+" row(s) are missing a name, assigned area, or contain text that needs review.","warn");
+ else showNotice($("reviewNotice"),"All five fields are mapped. Original area text is preserved. Only explicitly supplied ZIP codes are imported; place names will be normalized in Area Manager.","info");
  $("downloadBtn").disabled=!records.length||missing.length>0;
 }
 function parseWorkbook(file){
