@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#edf2f8">
+<title>RPCPH CRM — Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--navy:#012169;--blue:#418FDE;--ink:#142238;--muted:#718096;--line:rgba(255,255,255,.72);--glass:rgba(255,255,255,.28)}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)}
+body{min-height:100vh;background:#edf2f8 url('/luxury-building-wallpaper.svg') center/cover fixed no-repeat}
+button,input,select{font:inherit}
+.page{min-height:100vh;padding:26px clamp(16px,3vw,44px) 44px;background:linear-gradient(120deg,rgba(246,249,253,.66),rgba(239,245,252,.48))}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;max-width:1440px;margin:0 auto 35px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:750;letter-spacing:-.4px}
+.brandmark{width:42px;height:42px;display:grid;place-items:center;background:var(--navy);color:#fff;border-radius:11px;font-size:18px}
+.brand small{display:block;font-weight:500;color:#74839a;font-size:11px;letter-spacing:.08em;margin-top:2px}
+.top-actions{display:flex;align-items:center;gap:10px}
+.back{display:inline-flex;align-items:center;gap:9px;text-decoration:none;color:var(--navy);font-weight:650;font-size:13px;padding:11px 15px;border:1px solid rgba(1,33,105,.14);border-radius:10px;background:rgba(255,255,255,.54);backdrop-filter:blur(16px)}
+.wrap{max-width:1440px;margin:0 auto}
+.eyebrow{font-size:11px;letter-spacing:.16em;font-weight:750;color:#55739b;text-transform:uppercase}
+.intro{display:flex;justify-content:space-between;align-items:end;gap:30px;margin-bottom:24px}
+h1{font-size:clamp(34px,4vw,54px);letter-spacing:-2.4px;line-height:1.02;font-weight:620;margin:10px 0 10px;color:#172b4d}
+.lead{color:#63748c;font-size:14px;line-height:1.6;max-width:680px;margin:0}
+.status{white-space:nowrap;padding:9px 12px;border-radius:99px;background:rgba(255,255,255,.42);border:1px solid var(--line);color:#62738a;font-size:11px;font-weight:650}
+.panel{background:rgba(255,255,255,.26);border:1px solid rgba(255,255,255,.78);border-radius:18px;box-shadow:0 16px 44px rgba(16,36,68,.09),inset 0 1px 0 rgba(255,255,255,.84);backdrop-filter:blur(24px) saturate(170%);-webkit-backdrop-filter:blur(24px) saturate(170%)}
+.layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(290px,.75fr);gap:18px;align-items:start}
+.upload-panel{padding:22px}
+.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}
+h2{font-size:18px;letter-spacing:-.45px;margin:0 0 6px;color:#1b2e4d}
+.panel-head p,.helper{font-size:12px;line-height:1.55;color:#718096;margin:0}
+.filetypes{font-size:10px;color:#6b7b91;background:rgba(255,255,255,.48);border:1px solid rgba(255,255,255,.8);border-radius:8px;padding:7px 9px;white-space:nowrap}
+.drop{min-height:214px;border:1.5px dashed rgba(30,77,135,.32);border-radius:14px;background:rgba(255,255,255,.24);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;transition:.18s ease;cursor:pointer}
+.drop.drag{background:rgba(255,255,255,.58);border-color:var(--blue);transform:scale(.995)}
+.upload-icon{width:50px;height:50px;border-radius:15px;background:rgba(65,143,222,.13);display:grid;place-items:center;color:var(--navy);font-size:23px;margin-bottom:12px}
+.drop strong{font-size:15px;color:#263d5d}
+.drop p{font-size:12px;color:#718096;margin:7px 0 14px}
+.pick{border:0;background:var(--navy);color:white;border-radius:9px;padding:10px 16px;font-size:12px;font-weight:700;cursor:pointer}
+.filename{display:none;margin-top:13px;color:#34577f;font-size:12px;font-weight:650}
+.hidden{display:none!important}
+.side{display:grid;gap:14px}
+.guide{padding:20px}
+.guide ol{padding-left:18px;margin:14px 0 0;color:#596d86;font-size:12px;line-height:1.8}
+.guide li{padding-left:4px;margin-bottom:5px}
+.privacy{padding:16px 18px;border-radius:13px;background:rgba(1,33,105,.07);border:1px solid rgba(255,255,255,.75)}
+.privacy strong{font-size:12px;color:#24466f;display:flex;align-items:center;gap:7px}
+.privacy p{font-size:11px;line-height:1.6;color:#64768d;margin:7px 0 0}
+.section{margin-top:18px;padding:20px}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:15px}
+.section-head h2{margin:0}
+.count{font-size:11px;color:#526f95;background:rgba(255,255,255,.52);border:1px solid rgba(255,255,255,.76);border-radius:8px;padding:7px 10px}
+.mapping{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:10px}
+.map-field label{display:block;font-size:10px;letter-spacing:.07em;color:#6c7f98;font-weight:750;margin:0 0 7px;text-transform:uppercase}
+.map-field select{width:100%;height:40px;border-radius:9px;padding:0 10px;color:#263c5b;background:rgba(255,255,255,.58);border:1px solid rgba(255,255,255,.88);outline:none;font-size:12px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+.stat{padding:13px 14px;border:1px solid rgba(255,255,255,.72);background:rgba(255,255,255,.22);border-radius:12px}
+.stat strong{display:block;font-size:23px;letter-spacing:-.7px;color:#203c64}
+.stat span{font-size:10px;color:#718096}
+.table-wrap{overflow:auto;border:1px solid rgba(255,255,255,.72);border-radius:12px;background:rgba(255,255,255,.2)}
+table{width:100%;border-collapse:collapse;min-width:840px}
+th{text-align:left;font-size:10px;letter-spacing:.07em;color:#6a7d97;text-transform:uppercase;background:rgba(255,255,255,.36);padding:12px 13px;white-space:nowrap}
+td{font-size:12px;color:#354b68;padding:12px 13px;border-top:1px solid rgba(255,255,255,.55);vertical-align:top;max-width:320px}
+td.area{white-space:normal;min-width:250px;line-height:1.5}
+tbody tr:hover{background:rgba(255,255,255,.24)}
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+.action{border:1px solid rgba(1,33,105,.16);background:rgba(255,255,255,.48);color:var(--navy);border-radius:9px;padding:10px 13px;font-size:11px;font-weight:700;cursor:pointer}
+.action.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+.action:disabled{opacity:.4;cursor:not-allowed}
+.notice{display:none;padding:11px 13px;border-radius:9px;margin-top:13px;font-size:11px;line-height:1.5}
+.notice.show{display:block}
+.notice.info{background:rgba(65,143,222,.10);color:#244d7c;border:1px solid rgba(65,143,222,.18)}
+.notice.warn{background:rgba(189,125,35,.10);color:#79551e;border:1px solid rgba(189,125,35,.2)}
+.empty{padding:22px;text-align:center;color:#8190a4;font-size:12px}
+.footer-note{font-size:10px;color:#7c8ca1;line-height:1.6;margin-top:13px}
+@media(max-width:1050px){.layout{grid-template-columns:1fr}.side{grid-template-columns:1fr 1fr}.mapping{grid-template-columns:repeat(3,minmax(130px,1fr))}}
+@media(max-width:650px){.page{padding:16px 12px 30px}.topbar{margin-bottom:25px}.intro{display:block}.status{display:inline-block;margin-top:15px}.upload-panel,.section{padding:15px}.side{grid-template-columns:1fr}.mapping{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}.panel-head{display:block}.filetypes{display:inline-block;margin-top:10px}}
+</style>
+</head>
+<body>
+<div class="page">
+<header class="topbar">
+  <div class="brand"><div class="brandmark">R.</div><div>RPCPH CRM<small>ADMIN WORKSPACE</small></div></div>
+  <div class="top-actions"><a class="back" href="/">← <span>Back to CRM</span></a></div>
+</header>
+<main class="wrap">
+  <div class="intro">
+    <div><div class="eyebrow">Admin / Data management</div><h1>Employee directory import</h1><p class="lead">Upload the employee spreadsheet and review its records before they are prepared for the CRM search directory.</p></div>
+    <div class="status">Spreadsheet intake · Review mode</div>
+  </div>
+
+  <div class="layout">
+    <section class="panel upload-panel">
+      <div class="panel-head"><div><h2>Upload employee sheet</h2><p>Choose the workbook that contains employee names, office details, contact information, and assigned service areas.</p></div><span class="filetypes">.XLSX · .XLS · .CSV</span></div>
+      <div id="drop" class="drop" role="button" tabindex="0" aria-label="Choose spreadsheet">
+        <div class="upload-icon">↑</div>
+        <strong>Drop your spreadsheet here</strong>
+        <p>or select a file from your computer</p>
+        <button class="pick" id="pickBtn" type="button">Choose spreadsheet</button>
+        <div id="filename" class="filename"></div>
+      </div>
+      <input id="file" class="hidden" type="file" accept=".xlsx,.xls,.csv">
+      <div id="uploadNotice" class="notice info"></div>
+    </section>
+    <aside class="side">
+      <section class="panel guide"><h2>Expected columns</h2><p class="helper">The uploader will try to recognize these fields automatically. You can correct the mapping after the file is read.</p>
+        <ol><li><b>Name</b> — employee or agent name</li><li><b>Office</b> — assigned office or brokerage</li><li><b>Email</b> — work email address</li><li><b>Mobile / Contact Number</b> — phone number</li><li><b>Assigned Areas</b> — locations or territories in one cell</li></ol>
+      </section>
+      <section class="privacy"><strong>◈ Local review before database import</strong><p>This first step reads the spreadsheet in your browser and displays a review preview. It does not send the file to Supabase or write employee records yet. ZIP codes and area matching will be handled after the location text is reviewed.</p></section>
+    </aside>
+  </div>
+
+  <section id="review" class="panel section hidden">
+    <div class="section-head"><div><h2>Column mapping</h2><p class="helper">Confirm which spreadsheet column corresponds to each CRM field.</p></div><span id="sheetName" class="count">Sheet preview</span></div>
+    <div id="mapping" class="mapping"></div>
+    <div class="stats">
+      <div class="stat"><strong id="rowCount">0</strong><span>Employee rows</span></div>
+      <div class="stat"><strong id="nameCount">0</strong><span>Named employees</span></div>
+      <div class="stat"><strong id="areaCount">0</strong><span>Rows with assigned areas</span></div>
+      <div class="stat"><strong id="issueCount">0</strong><span>Rows needing review</span></div>
+    </div>
+    <div id="reviewNotice" class="notice"></div>
+    <div class="section-head" style="margin-top:22px"><div><h2>Employee record preview</h2><p class="helper">Original assigned-area text is preserved exactly as it appears in the sheet.</p></div><span id="previewCount" class="count">0 rows shown</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Name</th><th>Office</th><th>Email</th><th>Mobile / Contact</th><th>Assigned Areas — original cell</th></tr></thead><tbody id="previewBody"><tr><td colspan="5" class="empty">Upload a spreadsheet to preview employee rows.</td></tr></tbody></table></div>
+    <div class="actions"><button id="downloadBtn" class="action" type="button">Download reviewed CSV</button><button id="clearBtn" class="action" type="button">Clear file</button></div>
+    <p class="footer-note">The CSV export contains the five mapped fields and keeps the assigned-area cell unchanged. It is a review/export file, not yet a ZIP-normalized database import.</p>
+  </section>
+</main>
+</div>
+<script>
+const fields=[
+ {key:"name",label:"Name",aliases:["name","employee name","agent name","full name"]},
+ {key:"office",label:"Office",aliases:["office","brokerage","branch","company","office name"]},
+ {key:"email",label:"Email",aliases:["email","email address","work email","e mail"]},
+ {key:"mobile",label:"Mobile / Contact Number",aliases:["mobile","mobile number","contact number","phone","phone number","telephone","cell","cell phone"]},
+ {key:"areas",label:"Assigned Areas",aliases:["assigned areas","areas","service areas","territory","territories","assigned territory","location","locations","service area"]}
+];
+let matrix=[],headers=[],records=[],mapping={},fileLabel="";
+const $=id=>document.getElementById(id);
+function norm(v){return String(v??"").trim().toLowerCase().replace(/[_-]+/g," ").replace(/\s+/g," ");}
+function showNotice(el,msg,type="info"){el.textContent=msg;el.className="notice show "+type;}
+function hideNotice(el){el.className="notice";}
+function scoreHeader(row){let score=0;for(const f of fields){if(row.some(cell=>f.aliases.includes(norm(cell))))score++;}return score;}
+function detectHeader(data){
+ let best={index:0,score:-1};
+ for(let i=0;i<Math.min(data.length,15);i++){const s=scoreHeader(data[i]||[]);if(s>best.score)best={index:i,score:s};}
+ return best;
+}
+function autoMap(){
+ mapping={};
+ for(const f of fields){
+   let index=headers.findIndex(h=>f.aliases.includes(norm(h)));
+   if(index<0){
+    index=headers.findIndex(h=>f.aliases.some(a=>norm(h).includes(a)||a.includes(norm(h))));
+   }
+   mapping[f.key]=index>=0?String(index):"";
+ }
+}
+function renderMapping(){
+ const host=$("mapping");host.innerHTML="";
+ fields.forEach(f=>{
+  const wrap=document.createElement("div");wrap.className="map-field";
+  const label=document.createElement("label");label.textContent=f.label;label.htmlFor="map_"+f.key;
+  const select=document.createElement("select");select.id="map_"+f.key;
+  const none=document.createElement("option");none.value="";none.textContent="— Not mapped —";select.appendChild(none);
+  headers.forEach((h,i)=>{const o=document.createElement("option");o.value=String(i);o.textContent=(h||("Column "+(i+1)))+" · "+(i+1);select.appendChild(o);});
+  select.value=mapping[f.key]??"";select.addEventListener("change",()=>{mapping[f.key]=select.value;buildRecords();renderPreview();});
+  wrap.append(label,select);host.appendChild(wrap);
+ });
+}
+function buildRecords(){
+ records=matrix.map(row=>{
+  const obj={};
+  fields.forEach(f=>{const ix=mapping[f.key];obj[f.key]=ix===""||ix==null?"":String(row[Number(ix)]??"").trim();});
+  return obj;
+ }).filter(r=>fields.some(f=>r[f.key]!== ""));
+}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function renderPreview(){
+ const body=$("previewBody");
+ const shown=records.slice(0,15);
+ if(!records.length){body.innerHTML='<tr><td colspan="5" class="empty">No employee rows found. Check the column mapping or selected worksheet.</td></tr>';}
+ else{
+  body.innerHTML=shown.map(r=>'<tr><td><b>'+esc(r.name||"—")+'</b></td><td>'+esc(r.office||"—")+'</td><td>'+esc(r.email||"—")+'</td><td>'+esc(r.mobile||"—")+'</td><td class="area">'+esc(r.areas||"—")+'</td></tr>').join("");
+ }
+ const named=records.filter(r=>r.name).length;
+ const area=records.filter(r=>r.areas).length;
+ const issues=records.filter(r=>!r.name||!r.areas).length;
+ $("rowCount").textContent=records.length;
+ $("nameCount").textContent=named;
+ $("areaCount").textContent=area;
+ $("issueCount").textContent=issues;
+ $("previewCount").textContent="Showing "+Math.min(records.length,15)+" of "+records.length;
+ const missing=fields.filter(f=>mapping[f.key]==="").map(f=>f.label);
+ if(missing.length)showNotice($("reviewNotice"),"Map these required fields before exporting: "+missing.join(", ")+".","warn");
+ else if(issues)showNotice($("reviewNotice"),issues+" row(s) are missing a name or assigned area and should be checked.","warn");
+ else showNotice($("reviewNotice"),"All five fields are mapped. The source area text is preserved and ready for location review.","info");
+ $("downloadBtn").disabled=!records.length||missing.length>0;
+}
+function parseWorkbook(file){
+ if(!window.XLSX){showNotice($("uploadNotice"),"The spreadsheet reader could not load. Refresh the page and try again.","warn");return;}
+ const reader=new FileReader();
+ reader.onload=e=>{
+  try{
+   const wb=XLSX.read(e.target.result,{type:"array",cellDates:false});
+   const sheetName=wb.SheetNames.find(n=>{const a=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:""});return a.some(r=>r.some(c=>String(c??"").trim()));})||wb.SheetNames[0];
+   if(!sheetName)throw new Error("No worksheet was found in this file.");
+   const sheet=wb.Sheets[sheetName];
+   const rows=XLSX.utils.sheet_to_json(sheet,{header:1,defval:"",raw:false});
+   const top=detectHeader(rows);
+   headers=(rows[top.index]||[]).map((h,i)=>String(h??"").trim()||"Column "+(i+1));
+   matrix=rows.slice(top.index+1).filter(row=>row.some(cell=>String(cell??"").trim()));
+   if(!headers.length||!matrix.length)throw new Error("I could not find a header row followed by employee records.");
+   fileLabel=file.name;
+   $("filename").textContent="Selected: "+file.name;$("filename").style.display="block";
+   $("sheetName").textContent=sheetName+" · "+file.name;
+   autoMap();renderMapping();buildRecords();renderPreview();
+   $("review").classList.remove("hidden");
+   $("review").scrollIntoView({behavior:"smooth",block:"start"});
+   showNotice($("uploadNotice"),"Spreadsheet read successfully. Check the column mapping and review the employee records below.","info");
+  }catch(err){showNotice($("uploadNotice"),err.message||"Could not read this spreadsheet.","warn");}
+ };
+ reader.onerror=()=>showNotice($("uploadNotice"),"The selected file could not be read by this browser.","warn");
+ reader.readAsArrayBuffer(file);
+}
+function csvCell(v){const s=String(v??"");return '"'+s.replace(/"/g,'""')+'"';}
+function downloadCsv(){
+ buildRecords();
+ const missing=fields.filter(f=>mapping[f.key]==="");
+ if(missing.length){showNotice($("reviewNotice"),"Please map all five fields before exporting.","warn");return;}
+ const lines=[fields.map(f=>csvCell(f.label)).join(",")];
+ records.forEach(r=>lines.push(fields.map(f=>csvCell(r[f.key])).join(",")));
+ const blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8;"});
+ const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="RPCPH-employee-directory-review.csv";a.click();URL.revokeObjectURL(url);
+}
+function clearFile(){
+ matrix=[];headers=[];records=[];mapping={};fileLabel="";
+ $("file").value="";$("filename").textContent="";$("filename").style.display="none";
+ $("review").classList.add("hidden");hideNotice($("uploadNotice"));
+}
+$("pickBtn").addEventListener("click",e=>{e.stopPropagation();$("file").click();});
+$("drop").addEventListener("click",e=>{if(e.target.id!=="pickBtn")$("file").click();});
+$("drop").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" ")$("file").click();});
+$("file").addEventListener("change",e=>{const f=e.target.files?.[0];if(f)parseWorkbook(f);});
+$("drop").addEventListener("dragover",e=>{e.preventDefault();$("drop").classList.add("drag");});
+$("drop").addEventListener("dragleave",()=>$("drop").classList.remove("drag"));
+$("drop").addEventListener("drop",e=>{e.preventDefault();$("drop").classList.remove("drag");const f=e.dataTransfer.files?.[0];if(f)parseWorkbook(f);});
+$("downloadBtn").addEventListener("click",downloadCsv);
+$("clearBtn").addEventListener("click",clearFile);
+</script>
+</body>
+</html>
