@@ -240,7 +240,7 @@ html.auth-pending body{visibility:hidden}
 <main>
 <div class="top"><span>⌕</span><span>♧<sup>3</sup></span><span>☼</span><div class="avatar">👩🏻</div>
 
-<div class="square">N</div></div>
+<div class="square">N</div><button class="signout" id="signOut" type="button">Sign out</button></div>
 <section class="search-card lead-workflow" id="lead-workflow">
 <div class="search-title">
  <div><h2>New Lead · Find Available Agents</h2><p>Capture the caller's request, save the lead, then find agents serving the County used.</p></div>
@@ -619,7 +619,7 @@ async function submitLeadAndFindAgents(){
   button.disabled=false;button.textContent='Save Lead & Find Agents';
  }
 }
-(async()=>{const user=await RPCPHAuth.requireAuth();if(!user)return;const stamp=document.getElementById("isaStamp");if(stamp)stamp.textContent=user.display_name+" · "+user.role;const avatar=document.querySelector(".avatar");if(avatar)avatar.textContent=(user.display_name||"U").trim().split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase();populateCountyDatalist();})().catch(error=>{console.error("Local login check failed",error);location.replace("/Login/");});
+(async()=>{const user=await RPCPHAuth.requireAuth();if(!user)return;const signOut=document.getElementById("signOut");if(signOut)signOut.addEventListener("click",()=>RPCPHAuth.logout());const stamp=document.getElementById("isaStamp");if(stamp)stamp.textContent=user.display_name+" · "+user.role;const avatar=document.querySelector(".avatar");if(avatar)avatar.textContent=(user.display_name||"U").trim().split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase();populateCountyDatalist();})().catch(error=>{console.error("Local login check failed",error);location.replace("/Login/");});
 </script>
 </body>
 </html>
