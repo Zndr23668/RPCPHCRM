@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head>
+<head>\n<link rel="stylesheet" href="/crm-motion.css">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>RPCPH CRM — Area Manager</title>
@@ -522,5 +522,5 @@ $("assignFrom").value=new Date().toISOString().slice(0,10);
 loadAll();
 </script>
 <script>RPCPHAuth.requireAuth(["admin","superadmin"]).catch(()=>location.replace("/Login/"));</script>
-</body>
+<script src="/crm-motion.js" defer></script>\n</body>
 </html>
