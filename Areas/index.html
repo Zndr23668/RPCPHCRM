@@ -84,7 +84,9 @@ tbody tr:hover{background:rgba(255,255,255,.28)}
 @media(max-width:850px){.grid2{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.intro{align-items:flex-start;flex-direction:column}}
 @media(max-width:560px){.page{padding:16px 11px 30px}.topbar{align-items:flex-start}.brand{font-size:13px}.links{justify-content:flex-end}.linkbtn{padding:0 9px;font-size:10px}.panel{padding:12px}.stats{gap:7px}.stat{padding:12px}.stat strong{font-size:23px}.form-grid{grid-template-columns:1fr}.panel-head{display:block}.mini-stat{display:block;margin-top:9px}.toolbar{align-items:stretch}.toolbar .btn{flex:1}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+html.auth-pending body{visibility:hidden}
 </style>
+<script>document.documentElement.classList.add("auth-pending")</script><script src="/local-auth.js"></script>
 </head>
 <body>
 <div class="page">
@@ -519,5 +521,6 @@ $("locationSearch").addEventListener("input",renderLocations);
 $("assignFrom").value=new Date().toISOString().slice(0,10);
 loadAll();
 </script>
+<script>RPCPHAuth.requireAuth(["admin","superadmin"]).catch(()=>location.replace("/Login/"));</script>
 </body>
 </html>
