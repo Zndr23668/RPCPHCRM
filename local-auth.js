@@ -21,7 +21,7 @@
    document.documentElement.classList.remove("auth-pending");
    window.RPCPH_CURRENT_USER=data.user;
    return data.user;
-  }catch(e){clear();location.replace("/Login/");return null}
+  }catch(e){clear();location.replace("/?next="+encodeURIComponent(location.pathname+location.search));return null}
  }
  async function logout(){try{await api("logout")}catch{}clear();location.replace("/Login/")}
  window.RPCPHAuth={api,requireAuth,logout,saveToken,clear,token};
