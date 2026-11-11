@@ -293,7 +293,7 @@ function showAgentResults(rows, context, isPreview){
   const specialty=a.specialty||'Residential real estate';
   const initials=agentInitials(a.name);
   const contact=a.email||a.phone||'Contact details not provided';
-  const distance=Number.isFinite(a.__distanceMiles)?'<span class="agent-distance">⌖ '+a.__distanceMiles.toFixed(1)+' miles away</span>':'<span class="agent-distance unknown">Distance not available</span>';
+  const distance=Number.isFinite(a.__distanceMiles)?'<span class="agent-distance">⌖ '+esc(a.__distanceLabel||a.__distanceMiles.toFixed(1)+' mi')+'</span>':'<span class="agent-distance unknown">Distance not available</span>';
   const matchNote=a.__matchType==='assignment'?'Assigned to this territory':a.__matchType==='service_text'?'Area listed in agent profile':'Territory match';
   return '<article class="agent">'+
    '<div class="agent-top"><div class="agent-avatar">'+esc(initials)+'</div><div><div class="agent-name">'+esc(a.name)+'</div><div class="agent-company">'+esc(brokerage)+'</div></div></div>'+
@@ -414,38 +414,96 @@ function distanceMiles(lat1,lon1,lat2,lon2){
  const aa=Math.sin(dLat/2)**2+Math.cos(rad(lat1))*Math.cos(rad(lat2))*Math.sin(dLon/2)**2;
  return 2*R*Math.asin(Math.sqrt(Math.min(1,aa)));
 }
+async function fetchApproxOfficeCenters(agentRows,defaultStateCode){
+ const fixes={
+  "chapell hill":"Chapel Hill",
+  "fuquay":"Fuquay-Varina",
+  "north raleigh":"Raleigh"
+ };
+ const grouped=new Map(),perAgent=new Map();
+ for(const agent of agentRows){
+  const office=String(agent.brokerage||"").trim();
+  if(!office)continue;
+  const normalized=normalizeLeadText(office);
+  const placeName=fixes[normalized]||office;
+  const stateCode=inferLeadState([agent.service_area,agent.state,office].filter(Boolean).join(" "))||defaultStateCode;
+  if(!stateCode)continue;
+  const stateFips=Object.keys({
+   "01":"AL","02":"AK","04":"AZ","05":"AR","06":"CA","08":"CO","09":"CT","10":"DE","11":"DC","12":"FL","13":"GA","15":"HI","16":"ID","17":"IL","18":"IN","19":"IA","20":"KS","21":"KY","22":"LA","23":"ME","24":"MD","25":"MA","26":"MI","27":"MN","28":"MS","29":"MO","30":"MT","31":"NE","32":"NV","33":"NH","34":"NJ","35":"NM","36":"NY","37":"NC","38":"ND","39":"OH","40":"OK","41":"OR","42":"PA","44":"RI","45":"SC","46":"SD","47":"TN","48":"TX","49":"UT","50":"VT","51":"VA","53":"WA","54":"WV","55":"WI","56":"WY"
+  }).find(f=>({
+   "01":"AL","02":"AK","04":"AZ","05":"AR","06":"CA","08":"CO","09":"CT","10":"DE","11":"DC","12":"FL","13":"GA","15":"HI","16":"ID","17":"IL","18":"IN","19":"IA","20":"KS","21":"KY","22":"LA","23":"ME","24":"MD","25":"MA","26":"MI","27":"MN","28":"MS","29":"MO","30":"MT","31":"NE","32":"NV","33":"NH","34":"NJ","35":"NM","36":"NY","37":"NC","38":"ND","39":"OH","40":"OK","41":"OR","42":"PA","44":"RI","45":"SC","46":"SD","47":"TN","48":"TX","49":"UT","50":"VT","51":"VA","53":"WA","54":"WV","55":"WI","56":"WY"
+  })[f]===stateCode);
+  if(!stateFips)continue;
+  const key=stateCode+"|"+normalizeLeadText(placeName);
+  perAgent.set(agent.id,{stateCode,placeName,key});
+  if(!grouped.has(stateCode))grouped.set(stateCode,new Map());
+  grouped.get(stateCode).set(normalizeLeadText(placeName),placeName);
+ }
+ const centers=new Map();
+ await Promise.all([...grouped.entries()].map(async([stateCode,places])=>{
+  const names=[...places.values()];
+  if(!names.length)return;
+  const stateFips=Object.keys({
+   "01":"AL","02":"AK","04":"AZ","05":"AR","06":"CA","08":"CO","09":"CT","10":"DE","11":"DC","12":"FL","13":"GA","15":"HI","16":"ID","17":"IL","18":"IN","19":"IA","20":"KS","21":"KY","22":"LA","23":"ME","24":"MD","25":"MA","26":"MI","27":"MN","28":"MS","29":"MO","30":"MT","31":"NE","32":"NV","33":"NH","34":"NJ","35":"NM","36":"NY","37":"NC","38":"ND","39":"OH","40":"OK","41":"OR","42":"PA","44":"RI","45":"SC","46":"SD","47":"TN","48":"TX","49":"UT","50":"VT","51":"VA","53":"WA","54":"WV","55":"WI","56":"WY"
+  }).find(f=>({
+   "01":"AL","02":"AK","04":"AZ","05":"AR","06":"CA","08":"CO","09":"CT","10":"DE","11":"DC","12":"FL","13":"GA","15":"HI","16":"ID","17":"IL","18":"IN","19":"IA","20":"KS","21":"KY","22":"LA","23":"ME","24":"MD","25":"MA","26":"MI","27":"MN","28":"MS","29":"MO","30":"MT","31":"NE","32":"NV","33":"NH","34":"NJ","35":"NM","36":"NY","37":"NC","38":"ND","39":"OH","40":"OK","41":"OR","42":"PA","44":"RI","45":"SC","46":"SD","47":"TN","48":"TX","49":"UT","50":"VT","51":"VA","53":"WA","54":"WV","55":"WI","56":"WY"
+  })[f]===stateCode);
+  if(!stateFips)return;
+  const sqlNames=names.map(n=>"'"+n.replace(/'/g,"''")+"'").join(",");
+  const where="STATE='"+stateFips+"' AND BASENAME IN ("+sqlNames+")";
+  const url="https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/4/query?where="+encodeURIComponent(where)+"&outFields=BASENAME,STATE,GEOID,CENTLAT,CENTLON,INTPTLAT,INTPTLON&returnGeometry=false&f=json";
+  try{
+   const response=await fetch(url,{headers:{Accept:"application/json"}});
+   if(!response.ok)throw new Error("TIGERweb place lookup HTTP "+response.status);
+   const json=await response.json();
+   for(const feature of (json.features||[])){
+    const at=feature.attributes||{};
+    const lat=Number(at.CENTLAT||at.INTPTLAT),lng=Number(at.CENTLON||at.INTPTLON);
+    if(Number.isFinite(lat)&&Number.isFinite(lng)){
+     centers.set(stateCode+"|"+normalizeLeadText(at.BASENAME),{lat,lng,name:at.BASENAME,stateCode});
+    }
+   }
+  }catch(error){console.warn("Could not estimate office-city locations for",stateCode,error);}
+ }));
+ const result=new Map();
+ for(const [agentId,info] of perAgent){
+  const center=centers.get(info.key);
+  if(center)result.set(agentId,{...center,source:"TIGERweb place centroid"});
+ }
+ return result;
+}
 async function loadLeadAgentMatches(countyText,townText,countyArea){
- const countyBase=String(countyArea?.county_name||countyText||'').replace(/\s+County$/i,'').trim();
- const pattern='%'+countyBase.replace(/[%_]/g,' ').trim()+'%';
+ const countyBase=String(countyArea?.county_name||countyText||"").replace(/\s+County$/i,"").trim();
+ const pattern="%"+countyBase.replace(/[%_]/g," ").trim()+"%";
  const assignmentQuery=countyArea
-  ? db.from('agent_area_assignments').select('agent_id').eq('area_id',countyArea.id).eq('is_active',true).in('assignment_type',['coverage','primary'])
+  ? db.from("agent_area_assignments").select("agent_id").eq("area_id",countyArea.id).eq("is_active",true).in("assignment_type",["coverage","primary"])
   : Promise.resolve({data:[],error:null});
- const rawQuery=db.from('real_estate_agents').select('id,name,brokerage,email,phone,service_area,service_areas,city,state,zip_codes,specialty,active').eq('active',true).ilike('service_area',pattern).limit(100);
+ const rawQuery=db.from("real_estate_agents").select("id,name,brokerage,email,phone,service_area,service_areas,city,state,zip_codes,specialty,active").eq("active",true).ilike("service_area",pattern).limit(100);
  const [ass,raw]=await Promise.all([assignmentQuery,rawQuery]);
  if(ass.error)throw ass.error;
  if(raw.error)throw raw.error;
  const ids=[...new Set((ass.data||[]).map(x=>x.agent_id))];
  let assigned=[];
  if(ids.length){
-  const result=await db.from('real_estate_agents').select('id,name,brokerage,email,phone,service_area,service_areas,city,state,zip_codes,specialty,active').eq('active',true).in('id',ids);
+  const result=await db.from("real_estate_agents").select("id,name,brokerage,email,phone,service_area,service_areas,city,state,zip_codes,specialty,active").eq("active",true).in("id",ids);
   if(result.error)throw result.error;
-  assigned=(result.data||[]).map(a=>({...a,__matchType:'assignment'}));
+  assigned=(result.data||[]).map(a=>({...a,__matchType:"assignment"}));
  }
  const byId=new Map();
  for(const a of assigned)byId.set(a.id,a);
- for(const a of (raw.data||[]))if(!byId.has(a.id))byId.set(a.id,{...a,__matchType:'service_text'});
+ for(const a of (raw.data||[]))if(!byId.has(a.id))byId.set(a.id,{...a,__matchType:"service_text"});
  let matches=[...byId.values()];
  if(!matches.length&&countyArea){
   const token=normalizeLeadText(countyBase);
-  const areaAlias=[token,token+' county'];
-  const serviceResult=await db.from('real_estate_agents').select('id,name,brokerage,email,phone,service_area,service_areas,city,state,zip_codes,specialty,active').eq('active',true).overlaps('service_areas',areaAlias).limit(100);
+  const areaAlias=[token,token+" county"];
+  const serviceResult=await db.from("real_estate_agents").select("id,name,brokerage,email,phone,service_area,service_areas,city,state,zip_codes,specialty,active").eq("active",true).overlaps("service_areas",areaAlias).limit(100);
   if(serviceResult.error)throw serviceResult.error;
-  matches=(serviceResult.data||[]).map(a=>({...a,__matchType:'service_text'}));
+  matches=(serviceResult.data||[]).map(a=>({...a,__matchType:"service_text"}));
  }
  if(!matches.length)return [];
- const centroid=countyArea?await fetchCountyCentroid(countyArea).catch(err=>{console.warn('Could not get county centroid',err);return null;}):null;
+ const centroid=countyArea?await fetchCountyCentroid(countyArea).catch(err=>{console.warn("Could not get county centroid",err);return null;}):null;
  const matchIds=matches.map(a=>a.id);
- const {data:locs,error:locError}=await db.from('agent_locations').select('agent_id,latitude,longitude,matched_address,city,county_name,state_code,zip_code').eq('is_current',true).in('agent_id',matchIds);
+ const {data:locs,error:locError}=await db.from("agent_locations").select("agent_id,latitude,longitude,matched_address,city,county_name,state_code,zip_code").eq("is_current",true).in("agent_id",matchIds);
  if(locError)throw locError;
  const locationMap=new Map();
  for(const loc of (locs||[])){
@@ -453,22 +511,43 @@ async function loadLeadAgentMatches(countyText,townText,countyArea){
    const list=locationMap.get(loc.agent_id)||[];list.push(loc);locationMap.set(loc.agent_id,list);
   }
  }
+ const noStreetLocation=matches.filter(a=>!locationMap.has(a.id));
+ const approximateOfficeMap=await fetchApproxOfficeCenters(noStreetLocation,countyArea?.state_code);
  matches=matches.map(a=>{
   const locsForAgent=locationMap.get(a.id)||[];
-  let min=Infinity,nearest=null;
-  if(centroid)for(const loc of locsForAgent){
-   const d=distanceMiles(centroid.lat,centroid.lng,Number(loc.latitude),Number(loc.longitude));
-   if(d<min){min=d;nearest=loc;}
+  let min=Infinity,nearest=null,source=null,officeLabel=null;
+  if(centroid){
+   for(const loc of locsForAgent){
+    const d=distanceMiles(centroid.lat,centroid.lng,Number(loc.latitude),Number(loc.longitude));
+    if(d<min){min=d;nearest=loc;source="verified_address";officeLabel=loc.matched_address||loc.city||"Geocoded office";}
+   }
+   if(!nearest){
+    const approx=approximateOfficeMap.get(a.id);
+    if(approx){
+     min=distanceMiles(centroid.lat,centroid.lng,approx.lat,approx.lng);
+     source="office_city_estimate";officeLabel=approx.name+", "+approx.stateCode;
+    }
+   }
   }
-  return {...a,__distanceMiles:Number.isFinite(min)?min:null,__officeLocation:nearest?.matched_address||nearest?.city||null};
+  return {
+   ...a,
+   __distanceMiles:Number.isFinite(min)?min:null,
+   __distanceSource:source,
+   __officeLocation:officeLabel,
+   __distanceLabel:source==="verified_address"
+    ? min.toFixed(1)+" mi · geocoded office"
+    : source==="office_city_estimate"
+     ? "≈ "+min.toFixed(1)+" mi · office city estimate"
+     : null
+  };
  });
  matches.sort((a,b)=>{
   const ad=a.__distanceMiles,bd=b.__distanceMiles;
   if(ad!==null&&bd!==null)return ad-bd;
   if(ad!==null)return -1;
   if(bd!==null)return 1;
-  if(a.__matchType!==b.__matchType)return a.__matchType==='assignment'?-1:1;
-  return String(a.name||'').localeCompare(String(b.name||''));
+  if(a.__matchType!==b.__matchType)return a.__matchType==="assignment"?-1:1;
+  return String(a.name||"").localeCompare(String(b.name||""));
  });
  return matches;
 }
@@ -516,8 +595,10 @@ async function submitLeadAndFindAgents(){
    showAgentResults(matches.slice(0,12),{client:leadName,target:resolved.area.display_name},false);
    const located=matches.filter(a=>a.__distanceMiles!==null).length;
    if(located){
+    const verified=matches.filter(a=>a.__distanceSource==='verified_address').length;
+    const approximate=matches.filter(a=>a.__distanceSource==='office_city_estimate').length;
     const note=document.querySelector('.results-heading small');
-    if(note)note.textContent='Lead: '+leadName+' · County used: '+resolved.area.display_name+' · Ranked by distance from county center ('+located+' located agent(s))';
+    if(note)note.textContent='Lead: '+leadName+' · '+resolved.area.display_name+' · Straight-line distance from county center: '+verified+' geocoded office(s), '+approximate+' approximate office-city location(s)';
    }else{
     const note=document.querySelector('.results-heading small');
     if(note)note.textContent='Lead: '+leadName+' · County used: '+resolved.area.display_name+' · Territory matches shown; office/base locations still need geocoding';
