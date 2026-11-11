@@ -225,12 +225,46 @@ main{
 @media(max-width:650px){.lead-grid{grid-template-columns:1fr}.lead-workflow .search-title{align-items:flex-start;flex-direction:column}.lead-workflow .search-title h2{font-size:23px}.isa-stamp{white-space:normal}.lead-actions{align-items:stretch;flex-direction:column}.lead-actions .button{width:100%;min-width:0}.lead-helper{order:1}}
 
 </style>
-<style>html.auth-pending body{visibility:hidden}.signout{border:1px solid rgba(1,33,105,.16);background:rgba(255,255,255,.52);border-radius:7px;padding:8px 10px;color:#012169;font-size:10px;font-weight:750;cursor:pointer}</style>
-<script>document.documentElement.classList.add("auth-pending")</script>
+
+<style>
+/* Single-page sign-in: the workspace is already mounted behind the access layer. */
+.shell{transform:scale(1);transform-origin:50% 50%;opacity:1;filter:blur(0);transition:transform 900ms cubic-bezier(.2,.8,.2,1),opacity 650ms ease,filter 750ms ease;will-change:transform,opacity,filter}
+body:not(.authenticated) .shell{transform:scale(1.035);opacity:.18;filter:blur(13px);pointer-events:none}
+.auth-overlay{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;overflow:auto;padding:24px;background:#edf2f8 url('/luxury-building-wallpaper.svg') center/cover no-repeat;opacity:1;visibility:visible;transition:opacity 700ms ease,visibility 0s linear 0s}
+.auth-overlay-shade{position:absolute;inset:0;background:linear-gradient(120deg,rgba(239,245,252,.78),rgba(233,241,250,.42) 52%,rgba(235,240,248,.72));backdrop-filter:saturate(115%)}
+.auth-panel{position:relative;width:min(430px,100%);padding:36px;border:1px solid rgba(255,255,255,.86);border-radius:24px;background:rgba(255,255,255,.55);backdrop-filter:blur(28px) saturate(160%);-webkit-backdrop-filter:blur(28px) saturate(160%);box-shadow:0 24px 76px rgba(20,40,70,.16),inset 0 1px rgba(255,255,255,.9);transform:translateY(0) scale(1);transition:transform 760ms cubic-bezier(.18,.78,.22,1),opacity 560ms ease,filter 560ms ease}
+.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:34px}.auth-mark{width:46px;height:46px;border-radius:13px;background:#012169;color:#fff;display:grid;place-items:center;font-size:19px;font-weight:800}.auth-brand strong{display:block;font-size:15px;color:#142238}.auth-brand small{display:block;margin-top:3px;color:#718096;font-size:9px;letter-spacing:1.7px}
+.auth-eyebrow{font-size:10px;letter-spacing:1.8px;font-weight:800;color:#6480a4}.auth-panel h1{margin:9px 0 8px;color:#142238;font-size:34px;letter-spacing:-1.5px;font-weight:650}.auth-description{margin:0 0 27px;color:#718096;font-size:13px;line-height:1.6}
+.auth-panel label{display:block;margin-bottom:8px;color:#52647c;font-size:10px;font-weight:800;letter-spacing:1px}.auth-panel input{width:100%;height:52px;padding:0 15px;border:1px solid rgba(1,33,105,.17);border-radius:11px;outline:none;background:rgba(255,255,255,.78);color:#142238;font-size:15px}.auth-panel input:focus{border-color:#418FDE;box-shadow:0 0 0 3px rgba(65,143,222,.13)}
+.auth-panel button{width:100%;height:50px;margin-top:17px;border:0;border-radius:11px;background:#012169;color:#fff;font-weight:750;cursor:pointer;transition:transform 180ms ease,background 180ms ease}.auth-panel button:hover{background:#07327f;transform:translateY(-1px)}.auth-panel button:disabled{opacity:.62;cursor:wait;transform:none}
+.auth-status{display:none;margin-top:14px;padding:11px 12px;border-radius:9px;font-size:11px;line-height:1.5}.auth-status.show{display:block}.auth-status.error{background:#fff0ef;color:#9b3830}.auth-status.good{background:#eaf7f0;color:#26734e}
+body.authenticated .auth-overlay{opacity:0;visibility:hidden;pointer-events:none;transition:opacity 700ms ease,visibility 0s linear 700ms}
+body.authenticated .auth-panel{transform:translateY(-18px) scale(.94);opacity:0;filter:blur(12px)}
+@media(max-width:520px){.auth-overlay{padding:17px}.auth-panel{padding:27px 23px;border-radius:20px}}
+@media(prefers-reduced-motion:reduce){.shell,.auth-overlay,.auth-panel,.auth-panel button{transition:none!important}body:not(.authenticated) .shell{transform:none;filter:none}}
+</style>
+<style>.signout{border:1px solid rgba(1,33,105,.16);background:rgba(255,255,255,.52);border-radius:7px;padding:8px 10px;color:#012169;font-size:10px;font-weight:750;cursor:pointer}</style>
 <script src="/local-auth.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+
+<div class="auth-overlay" id="authOverlay" aria-hidden="false">
+  <div class="auth-overlay-shade"></div>
+  <main class="auth-panel" aria-labelledby="authTitle">
+    <div class="auth-brand"><div class="auth-mark">R.</div><div><strong>RPCPH CRM</strong><small>SECURE STAFF ACCESS</small></div></div>
+    <div class="auth-eyebrow">WELCOME BACK</div>
+    <h1 id="authTitle">Welcome back.</h1>
+    <p class="auth-description">Enter the ID KEY issued to you by your CRM administrator.</p>
+    <form id="authLoginForm" autocomplete="on">
+      <label for="authIdKey">ID KEY</label>
+      <input id="authIdKey" name="id_key" type="password" autocomplete="current-password" placeholder="Enter your ID KEY" required autofocus>
+      <button id="authLoginButton" type="submit">Sign in</button>
+    </form>
+    <div class="auth-status" id="authStatus" role="status" aria-live="polite"></div>
+  </main>
+</div>
+
 <div class="shell">
 <aside>
 <div class="logo">R.</div>
@@ -618,7 +652,79 @@ async function submitLeadAndFindAgents(){
   button.disabled=false;button.textContent='Save Lead & Find Agents';
  }
 }
-(async()=>{const user=await RPCPHAuth.requireAuth();if(!user)return;const signOut=document.getElementById("signOut");if(signOut)signOut.addEventListener("click",()=>RPCPHAuth.logout());const stamp=document.getElementById("isaStamp");if(stamp)stamp.textContent=user.display_name+" · "+user.role;const avatar=document.querySelector(".avatar");if(avatar)avatar.textContent=(user.display_name||"U").trim().split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase();populateCountyDatalist();})().catch(error=>{console.error("Local login check failed",error);location.replace("/Login/");});
+
+function setSignedInUser(user){
+  window.RPCPH_CURRENT_USER=user;
+  const stamp=document.getElementById("isaStamp");
+  if(stamp)stamp.textContent=user.display_name+" · "+user.role;
+  const avatar=document.querySelector(".avatar");
+  if(avatar)avatar.textContent=(user.display_name||"U").trim().split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase();
+  document.body.classList.add("authenticated");
+  document.getElementById("authOverlay").setAttribute("aria-hidden","true");
+  populateCountyDatalist();
+}
+function nextDestination(){
+  const next=new URLSearchParams(window.location.search).get("next");
+  return next&&next.startsWith("/")&&!next.startsWith("//")&&next!=="/"?next:null;
+}
+function continueToNextPage(){
+  const next=nextDestination();
+  if(next)window.setTimeout(()=>window.location.replace(next),760);
+}
+const authForm=document.getElementById("authLoginForm");
+const authButton=document.getElementById("authLoginButton");
+const authKey=document.getElementById("authIdKey");
+const authStatus=document.getElementById("authStatus");
+authForm.addEventListener("submit",async event=>{
+  event.preventDefault();
+  authButton.disabled=true;
+  authButton.textContent="Signing in…";
+  authStatus.className="auth-status";
+  try{
+    const result=await RPCPHAuth.api("login",{id_key:authKey.value});
+    if(!result.token)throw new Error("The sign-in service did not return a session.");
+    RPCPHAuth.saveToken(result.token);
+    const session=await RPCPHAuth.api("me");
+    setSignedInUser(session.user);
+    authKey.value="";
+    authStatus.textContent="Signed in. Opening your workspace…";
+    authStatus.className="auth-status show good";
+    continueToNextPage();
+  }catch(error){
+    RPCPHAuth.clear();
+    authStatus.textContent=error.message||"Sign-in failed. Check your ID KEY and try again.";
+    authStatus.className="auth-status show error";
+    authKey.focus();
+  }finally{
+    authButton.disabled=false;
+    authButton.textContent="Sign in";
+  }
+});
+const signOut=document.getElementById("signOut");
+if(signOut)signOut.addEventListener("click",async()=>{
+  signOut.disabled=true;
+  try{await RPCPHAuth.api("logout")}catch{}
+  RPCPHAuth.clear();
+  window.RPCPH_CURRENT_USER=null;
+  document.body.classList.remove("authenticated");
+  authKey.value="";
+  authStatus.textContent="You have signed out.";
+  authStatus.className="auth-status show good";
+  authKey.focus();
+  signOut.disabled=false;
+});
+(async()=>{
+  if(!RPCPHAuth.token())return;
+  try{
+    const session=await RPCPHAuth.api("me");
+    setSignedInUser(session.user);
+    continueToNextPage();
+  }catch(error){
+    RPCPHAuth.clear();
+    console.info("No active CRM session:",error.message);
+  }
+})();
+
 </script>
 </body>
 </html>
