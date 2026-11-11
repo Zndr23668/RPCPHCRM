@@ -255,7 +255,7 @@ async function importToDatabase(){
   for(const r of valid){
    const email=String(r.email||"").trim().toLowerCase(), name=String(r.name||"").trim().toLowerCase();
    if((email&&emailSet.has(email))||(!email&&nameSet.has(name))){skipped++;continue;}
-   const parsed=parseAssignedAreas(r.areas);\n   fresh.push({name:String(r.name).trim(),brokerage:r.office||"",email:r.email||null,phone:r.mobile||null,service_area:r.areas||null,service_areas:parsed.locations,zip_codes:parsed.zips,active:true});
+   const parsed=parseAssignedAreas(r.areas);\n   fresh.push({name:String(r.name).trim(),brokerage:r.office||"",email:r.email||null,phone:r.mobile||null,service_area:r.areas||null,service_areas:parsed.locations.map(v=>v.toLowerCase().replace(/\\s*,\\s*[a-z]{2}$/i,"").trim()),zip_codes:parsed.zips,active:true});
    if(email)emailSet.add(email);else nameSet.add(name);
   }
   let imported=0;
