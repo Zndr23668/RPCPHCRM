@@ -146,7 +146,7 @@ function Dashboard({user,onLogout}){
  const [lead,setLead]=useState({name:"",location:"",type:"Buyer",source:"MVIP New Prospect"});
  const [agents,setAgents]=useState([]);const [expandedAgents,setExpandedAgents]=useState([]);const [showMore,setShowMore]=useState(false);const [status,setStatus]=useState("");const [loading,setLoading]=useState(false);const [rouletteOffer,setRouletteOffer]=useState(null);const [rouletteEvents,setRouletteEvents]=useState({});const [respondingAgent,setRespondingAgent]=useState(null);const [declineTarget,setDeclineTarget]=useState(null);const [declineReason,setDeclineReason]=useState("");const [declineBusy,setDeclineBusy]=useState(false);const [currentLead,setCurrentLead]=useState(null);
  const [locationSuggestions,setLocationSuggestions]=useState([]);const [suggestionsOpen,setSuggestionsOpen]=useState(false);const [suggestionsLoading,setSuggestionsLoading]=useState(false);const [selectedLocation,setSelectedLocation]=useState(null);
- const [metrics,setMetrics]=useState([{n:"—",l:"Active leads",detail:"Loading live data…"},{n:"—",l:"Agents available",detail:"Loading live data…"},{n:"—",l:"Search readiness",detail:"Loading lead-source mix…"}]);
+ const [metrics,setMetrics]=useState([{n:"—",l:"Active leads",detail:"Loading live data…"},{n:"—",l:"Agents available",detail:"Loading live data…"},{n:"—",l:"Top lead source",detail:"Loading lead-source mix…"}]);
  useEffect(()=>{const query=lead.location.trim();if(query.length<3){setLocationSuggestions([]);setSuggestionsOpen(false);setSuggestionsLoading(false);return;}const controller=new AbortController();const timer=setTimeout(async()=>{setSuggestionsLoading(true);try{const url="https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=us&q="+encodeURIComponent(query);const response=await fetch(url,{headers:{Accept:"application/json"},signal:controller.signal});if(!response.ok)throw new Error("Location suggestions unavailable");const data=await response.json();setLocationSuggestions(Array.isArray(data)?data:[]);setSuggestionsOpen(true);}catch(error){if(error.name!=="AbortError")setLocationSuggestions([]);}finally{if(!controller.signal.aborted)setSuggestionsLoading(false);}},450);return()=>{clearTimeout(timer);controller.abort();};},[lead.location]);
  function chooseLocation(place){setLead(current=>({...current,location:place.display_name}));setSelectedLocation({latitude:Number(place.lat),longitude:Number(place.lon),label:place.display_name});setLocationSuggestions([]);setSuggestionsOpen(false);}
  async function refreshMetrics(){
@@ -155,13 +155,13 @@ function Dashboard({user,onLogout}){
    setMetrics([
     {n:Number(data.active_leads||0).toLocaleString(),l:"Active leads",detail:"Live open leads"},
     {n:Number(data.active_agents||0).toLocaleString(),l:"Agents available",detail:"Active agent database records"},
-    {n:(Number(data.top_source_percent)||0)+"%",l:"Search readiness",detail:data.total_leads?("Top source: "+data.top_source+" · "+data.top_source_count+"/"+data.total_leads+" leads"):"No lead-source data yet"}
+    {n:(Number(data.top_source_percent)||0)+"%",l:"Top lead source",detail:data.total_leads?(data.top_source+" · "+data.top_source_count+" of "+data.total_leads+" leads"):"No lead-source data yet"}
    ]);
   }catch(error){
    setMetrics([
     {n:"—",l:"Active leads",detail:"Live data unavailable"},
     {n:"—",l:"Agents available",detail:"Live data unavailable"},
-    {n:"—",l:"Search readiness",detail:"Lead-source data unavailable"}
+    {n:"—",l:"Top lead source",detail:"Lead-source data unavailable"}
    ]);
   }
  }
