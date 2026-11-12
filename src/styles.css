@@ -33,3 +33,32 @@
 .decline-dialog-head{display:flex;justify-content:space-between;gap:16px}.decline-dialog-head h3{margin:8px 0;font-size:21px;letter-spacing:-.6px}.decline-dialog-head p{font-size:12px;line-height:1.5;color:#718096;margin:0 0 14px}.decline-close{width:32px;height:32px;border:0;border-radius:50%;background:#e8eef6;color:#234;font-size:20px;cursor:pointer}
 .decline-dialog textarea{width:100%;min-height:112px;resize:vertical;padding:13px;border:1px solid #d6e0ec;border-radius:12px;background:#fff;color:#1d2c40;font:inherit;font-size:13px;outline:none}.decline-dialog textarea:focus{border-color:#418fde;box-shadow:0 0 0 3px rgba(65,143,222,.12)}
 .decline-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:14px}.decline-cancel{border:1px solid #d4dfec;background:#fff;color:#345;padding:10px 15px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer}
+
+
+/* Shared company lockup: clean, balanced wordmarks for the CRM shell. */
+.login-company-lockup,.workspace-company-lockup{display:flex;align-items:center;gap:12px;min-width:0}
+.login-company-lockup{justify-content:flex-start;margin-bottom:10px}
+.workspace-company-lockup{gap:10px}
+.company-logo{display:flex;align-items:center;min-width:0;gap:8px;color:#193657}
+.remote-company{gap:9px}
+.rp-symbol{width:39px;height:39px;display:grid;place-items:center;flex:0 0 39px;border-radius:11px;background:#0c3767;color:#fff;font-size:14px;font-weight:900;letter-spacing:-1px}
+.rp-wordmark{display:flex;flex-direction:column;line-height:.94;letter-spacing:.13em}
+.rp-wordmark strong{font-size:15px;font-weight:900}
+.rp-wordmark small{font-size:8px;letter-spacing:.22em;font-weight:850;margin-top:5px;color:#47627e}
+.company-separator{height:31px;width:1px;background:rgba(25,54,87,.18);flex:0 0 1px}
+.cb-symbol{width:28px;height:28px;display:grid;place-items:center;flex:0 0 28px;border:1.5px solid #47627e;border-radius:7px;color:#294b70;font-size:9px;font-weight:900;letter-spacing:-.5px}
+.cb-wordmark{font-size:11px;font-weight:750;line-height:1.02;letter-spacing:-.25px;color:#53677d}
+.login-product-name{font-size:10px;font-weight:850;color:#73849a;letter-spacing:.18em;margin:0 0 17px}
+.workspace-heading{display:flex;flex-direction:column;align-items:flex-start;gap:7px}
+.workspace-heading h2{margin:0;font-size:17px;line-height:1.1;font-weight:700;letter-spacing:-.35px;color:var(--ink,#172335)}
+.metric small{display:block;margin-top:5px;font-size:9px;line-height:1.35;color:#8190a3;max-width:100%;overflow-wrap:anywhere}
+@media(max-width:760px){
+ .workspace-company-lockup{gap:7px}
+ .rp-symbol{width:32px;height:32px;flex-basis:32px;font-size:12px}
+ .rp-wordmark strong{font-size:12px}
+ .rp-wordmark small{font-size:7px}
+ .cb-symbol{width:24px;height:24px;flex-basis:24px}
+ .cb-wordmark{font-size:9px}
+ .company-separator{height:26px}
+ .login-company-lockup{gap:8px}
+}
