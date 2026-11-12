@@ -138,13 +138,13 @@ function Dashboard({user,onLogout}){
  const [agents,setAgents]=useState([]);const [status,setStatus]=useState("");const [loading,setLoading]=useState(false);
  const reduce=useReducedMotion();
  const isAdmin=["admin","superadmin"].includes(user?.role);
- async function submit(e){e.preventDefault();if(!lead.location.trim()){setStatus("Enter a ZIP code, town, county, or location.");return;}setLoading(true);setStatus("Finding agents within 20 miles…");
+ async function submit(e){e.preventDefault();if(!lead.name.trim()){setStatus("Enter the lead name.");return;}if(!lead.location.trim()){setStatus("Enter a ZIP code, town, county, state, or location.");return;}if(!lead.type||!lead.source){setStatus("Select a lead type and lead source.");return;}setLoading(true);setStatus("Finding agents within 20 miles…");
   try{
    const geo=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&q="+encodeURIComponent(lead.location.trim()),{headers:{"Accept":"application/json"}});
    const places=await geo.json();
    if(!places?.length)throw new Error("Location not found. Try a ZIP code, town, county, or city and state.");
    const origin={latitude:Number(places[0].lat),longitude:Number(places[0].lon),label:places[0].display_name};
-   const d=await api("create_lead",{lead_name:lead.name,target_location:lead.location.trim(),target_latitude:origin.latitude,target_longitude:origin.longitude,radius_miles:20,lead_type:lead.type,lead_source:lead.source});
+   const d=await api("create_lead",{lead_name:lead.name.trim(),town_or_county:lead.location.trim(),target_county:lead.location.trim(),target_location:lead.location.trim(),target_latitude:origin.latitude,target_longitude:origin.longitude,radius_miles:20,lead_type:lead.type,lead_source:lead.source});
    const milesBetween=(lat1,lon1,lat2,lon2)=>{const rad=x=>x*Math.PI/180;const dLat=rad(lat2-lat1),dLon=rad(lon2-lon1);const h=Math.sin(dLat/2)**2+Math.cos(rad(lat1))*Math.cos(rad(lat2))*Math.sin(dLon/2)**2;return 3958.7613*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));};
    const within20=(d.agents||[]).map(a=>{const direct=Number(a.distance_miles??a.distance??NaN);const lat=Number(a.latitude??a.lat??a.agent_latitude??NaN);const lon=Number(a.longitude??a.lng??a.lon??a.agent_longitude??NaN);const distance=Number.isFinite(direct)?direct:(Number.isFinite(lat)&&Number.isFinite(lon)?milesBetween(origin.latitude,origin.longitude,lat,lon):NaN);return {...a,distance_miles:distance};}).filter(a=>Number.isFinite(a.distance_miles)&&a.distance_miles<=20).sort((a,b)=>a.distance_miles-b.distance_miles);
    setAgents(within20);setStatus(within20.length?within20.length+" agent(s) found within 20 miles of "+origin.label:"No agents found within 20 miles.");
