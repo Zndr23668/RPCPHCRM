@@ -85,7 +85,7 @@ html.auth-pending body{visibility:hidden}
 <body>
 <div class="page">
 <header class="topbar">
-  <div class="brand"><div class="brandmark">R.</div><div>RPCPH CRM<small>DATABASE VIEW</small></div></div>
+  <div class="brand"><div class="brandmark">R.</div><div>RPCPH CRM<small>AGENT PROFILES</small></div></div>
   <div class="top-actions"><a class="linkbtn" href="/Leads/">▤ Lead Listings</a><a class="linkbtn" href="/Areas/">⌖ Area Manager</a><a class="linkbtn" href="/Admin/">⚙ Admin import</a><a class="linkbtn" href="/">← Back to CRM</a></div>
 </header>
 <section class="intro">
@@ -100,7 +100,7 @@ html.auth-pending body{visibility:hidden}
 </section>
 <section class="panel">
   <div class="toolbar">
-    <div class="field"><label for="search">SEARCH DATABASE</label><input id="search" type="search" placeholder="Name, office, email, phone, city, ZIP…"></div>
+    <div class="field"><label for="search">SEARCH AGENTS</label><input id="search" type="search" placeholder="Name, office, email, phone, city, ZIP…"></div>
     <div class="field"><label for="status">STATUS</label><select id="status"><option value="all">All permitted records</option><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
     <div class="field"><label for="sort">SORT BY</label><select id="sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="name">Name A–Z</option></select></div>
     <button class="btn primary" id="searchBtn" type="button">Search</button>
@@ -115,7 +115,7 @@ html.auth-pending body{visibility:hidden}
     </table>
   </div>
   <div class="pager"><div class="pager-info" id="pagerInfo">—</div><div class="pager-actions"><button class="btn" id="prevBtn" type="button" disabled>← Previous</button><button class="btn" id="nextBtn" type="button" disabled>Next →</button><button class="btn" id="exportBtn" type="button" disabled>↓ Export page CSV</button></div></div>
-  <p class="footnote">This screen does not create, edit, or delete records. Results are limited by the read permissions configured in Supabase Row Level Security (RLS). The CSV action exports the currently displayed page only.</p>
+  <p class="footnote">Open an agent profile to edit its directory information and review that agent's accepted and declined lead opportunities. CSV export includes the currently displayed page only.</p>
 </section>
 </div>
 
@@ -167,7 +167,7 @@ async function loadRows(){
 function renderRows(){
  const body=$("rows");
  if(!currentRows.length){
-  body.innerHTML='<tr><td colspan="9" class="empty">No records match this search, or the current Supabase read policy does not allow these rows.</td></tr>';
+  body.innerHTML='<tr><td colspan="9" class="empty">No agent profiles match this search.</td></tr>';
  }else{
   body.innerHTML=currentRows.map((r,i)=>{
    const areas=Array.isArray(r.service_areas)&&r.service_areas.length?r.service_areas.join(", "):(r.service_area||"—");
@@ -245,7 +245,7 @@ function exportPage(){
  const lines=[columns.map(csvCell).join(",")];
  currentRows.forEach(r=>lines.push(columns.map(key=>csvCell(Array.isArray(r[key])?r[key].join("; "):r[key])).join(",")));
  const blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
- const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="RPCPH-database-page-"+(page+1)+".csv";a.click();URL.revokeObjectURL(url);
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="RPCPH-agent-profiles-page-"+(page+1)+".csv";a.click();URL.revokeObjectURL(url);
 }
 function runSearch(){page=0;loadRows();}
 $("searchBtn").addEventListener("click",runSearch);
