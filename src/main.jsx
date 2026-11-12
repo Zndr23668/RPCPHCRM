@@ -134,13 +134,20 @@ function Field({label,value,onChange,placeholder}){return <label className="fiel
 function Select({label,value,onChange,options}){return <label className="field"><span>{label}</span><select value={value} onChange={e=>onChange(e.target.value)}>{options.map(x=><option key={x}>{x}</option>)}</select></label>}
 
 function Dashboard({user,onLogout}){
- const [lead,setLead]=useState({name:"",town:"",type:"Buyer",county:"",source:"MVIP New Prospect"});
+ const [lead,setLead]=useState({name:"",location:"",type:"Buyer",source:"MVIP New Prospect"});
  const [agents,setAgents]=useState([]);const [status,setStatus]=useState("");const [loading,setLoading]=useState(false);
  const reduce=useReducedMotion();
  const isAdmin=["admin","superadmin"].includes(user?.role);
- async function submit(e){e.preventDefault();setLoading(true);setStatus("Finding the nearest available agents…");
-  try{const d=await api("create_lead",{lead_name:lead.name,town_or_county:lead.town,lead_type:lead.type,target_county:lead.county,lead_source:lead.source});setAgents(d.agents||[]);setStatus(d.agents?.length?d.agents.length+" matching agent(s) found.":"Lead saved. No matching agents were found.");}
-  catch(err){setStatus(err.message||"Could not save lead");}finally{setLoading(false)}
+ async function submit(e){e.preventDefault();if(!lead.location.trim()){setStatus("Enter a ZIP code, town, county, or location.");return;}setLoading(true);setStatus("Finding agents within 20 miles…");
+  try{
+   const geo=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&q="+encodeURIComponent(lead.location.trim()),{headers:{"Accept":"application/json"}});
+   const places=await geo.json();
+   if(!places?.length)throw new Error("Location not found. Try a ZIP code, town, county, or city and state.");
+   const origin={latitude:Number(places[0].lat),longitude:Number(places[0].lon),label:places[0].display_name};
+   const d=await api("create_lead",{lead_name:lead.name,target_location:lead.location.trim(),target_latitude:origin.latitude,target_longitude:origin.longitude,radius_miles:20,lead_type:lead.type,lead_source:lead.source});
+   const within20=(d.agents||[]).map(a=>{const distance=Number(a.distance_miles??a.distance??NaN);return {...a,distance_miles:Number.isFinite(distance)?distance:null};}).filter(a=>a.distance_miles==null||a.distance_miles<=20).sort((a,b)=>(a.distance_miles??Infinity)-(b.distance_miles??Infinity));
+   setAgents(within20);setStatus(within20.length?within20.length+" agent(s) found within 20 miles of "+origin.label:"No agents found within 20 miles.");
+  }catch(err){setStatus(err.message||"Could not search for agents");}finally{setLoading(false)}
  }
  const metrics=useMemo(()=>[{n:"24",l:"Active leads"},{n:"18",l:"Agents available"},{n:"96%",l:"Search readiness"}],[]);
  return <motion.div className="app" initial={reduce?false:"initial"} animate="animate" variants={pageVariants}>
@@ -161,14 +168,13 @@ function Dashboard({user,onLogout}){
     <div className="card-head"><div><span className="eyebrow">NEW LEAD</span><h3>Save lead & find agents</h3></div><span className="isa">ISA · {user?.display_name||"Current user"}</span></div>
     <div className="grid">
      <Field label="Lead name" value={lead.name} onChange={v=>setLead({...lead,name:v})} placeholder="Client name"/>
-     <Field label="Town or county" value={lead.town} onChange={v=>setLead({...lead,town:v})} placeholder="Caller location"/>
+     <label className="field location-field"><span>What are you looking for?</span><input value={lead.location} onChange={e=>setLead({...lead,location:e.target.value})} placeholder="ZIP code, town, county, or location" autoComplete="off"/></label>
      <Select label="Lead type" value={lead.type} onChange={v=>setLead({...lead,type:v})} options={["Buyer","Seller","Investor","Land"]}/>
-     <Field label="Target county" value={lead.county} onChange={v=>setLead({...lead,county:v})} placeholder="County client is looking in"/>
      <Select label="Lead source" value={lead.source} onChange={v=>setLead({...lead,source:v})} options={["MVIP New Prospect","MVIP BLA","MVIP Prio CB","Rocket Mortgage","Website","Internet Call","Cold Call","Other"]}/>
     </div>
-    <div className="actions"><span>{status||"Search is matched against active agent territories."}</span><motion.button className="primary action" disabled={loading} whileHover={{scale:1.015}} whileTap={{scale:.985}}>{loading?"Searching…":"Save Lead & Find Agents"}</motion.button></div>
+    <div className="actions"><span>{status||"Press Enter to search active agents within 20 miles."}</span><motion.button type="submit" className="primary action" disabled={loading} whileHover={{scale:1.015}} whileTap={{scale:.985}}>{loading?"Searching…":"Save Lead & Find Agents"}</motion.button></div>
    </motion.form>
-   <AnimatePresence mode="popLayout"><motion.section className="results" layout initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} transition={spring}>{agents.length>0&&<><div className="results-head"><div><span className="eyebrow">MATCHES</span><h3>Available agents</h3></div><span>{agents.length} result{agents.length===1?"":"s"}</span></div>{agents.map((a,i)=><motion.article className="agent" key={a.id||i} layout initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} transition={{...spring,delay:i*.05}} whileHover={{y:-3}}><div className="agent-avatar">{String(a.name||"A").split(" ").map(x=>x[0]).slice(0,2).join("")}</div><div><h4>{a.name}</h4><p>{a.brokerage||"Independent agent"}</p><small>{a.service_area||a.service_areas?.join(", ")||"Service area available"}</small></div></motion.article>)}</>}</motion.section></AnimatePresence>
+   <AnimatePresence mode="popLayout"><motion.section className="results" layout initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} transition={spring}>{agents.length>0&&<><div className="results-head"><div><span className="eyebrow">MATCHES</span><h3>Available agents</h3></div><span>{agents.length} result{agents.length===1?"":"s"}</span></div>{agents.map((a,i)=><motion.article className="agent" key={a.id||i} layout initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} transition={{...spring,delay:i*.05}} whileHover={{y:-3}}><div className="agent-avatar">{String(a.name||"A").split(" ").map(x=>x[0]).slice(0,2).join("")}</div><div><h4>{a.name}</h4><p>{a.brokerage||"Independent agent"}</p><small>{a.service_area||a.service_areas?.join(", ")||"Service area available"}{a.distance_miles!=null&&" · "+a.distance_miles.toFixed(1)+" mi"}</small></div></motion.article>)}</>}</motion.section></AnimatePresence>
   </main>
  </motion.div>
 }
