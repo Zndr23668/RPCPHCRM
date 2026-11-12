@@ -10,6 +10,7 @@ import adminPage from "../Admin/index.html?raw";
 import usersPage from "../Admin/Users/index.html?raw";
 import areasPage from "../Areas/index.html?raw";
 import databasePage from "../DB/index.html?raw";
+import agentsPage from "../Agents/index.html?raw";
 import leadsPage from "../Leads/index.html?raw";
 
 const API="https://pfuomojvcuwbvqtzvglb.supabase.co/functions/v1/rpcph-local-auth";
@@ -32,7 +33,8 @@ function routeForPath(path){
  if(p==="/Admin/Users"||p==="/Admin/Users/index.html")return "users";
  if(p==="/Admin"||p==="/Admin/index.html")return "admin";
  if(p==="/Areas"||p==="/Areas/index.html")return "areas";
- if(p==="/DB"||p==="/DB/index.html"||p==="/Agents"||p==="/Agents/index.html")return "agents";
+ if(p==="/DB"||p==="/DB/index.html")return "database";
+ if(p==="/Agents"||p==="/Agents/index.html")return "agents";
  if(p==="/Leads"||p==="/Leads/index.html")return "leads";
  return "home";
 }
@@ -121,7 +123,12 @@ function Login({onLogin}){
  return <motion.div className="auth-scene" initial={reduce?false:{opacity:0}} animate={{opacity:1}} transition={{duration:.45}}>
   <div className="auth-backdrop"/>
   <motion.form className="auth-panel" onSubmit={submit} initial={reduce?false:{opacity:0,y:20,scale:.985}} animate={{opacity:1,y:0,scale:1}} transition={{...spring,delay:.08}}>
-   <div className="brand"><div className="brandmark">R.</div><div><b>RPCPH CRM</b><small>REMOTE PROFESSIONALS</small></div></div>
+   <div className="login-company-lockup" aria-label="Remote Professionals and Coldwell Banker">
+    <div className="company-logo remote-company"><span className="rp-symbol">RP</span><span className="rp-wordmark"><strong>REMOTE</strong><small>PROFESSIONALS</small></span></div>
+    <span className="company-separator" aria-hidden="true"></span>
+    <div className="company-logo coldwell-company"><span className="cb-symbol">CB</span><span className="cb-wordmark">Coldwell<br/>Banker</span></div>
+   </div>
+   <div className="login-product-name">RPCPH CRM</div>
    <div className="eyebrow">CRM ACCESS</div><h1>Sign in</h1>
    <p>Enter the ID KEY issued to you by your CRM administrator.</p>
    <label>ID KEY</label>
@@ -139,8 +146,26 @@ function Dashboard({user,onLogout}){
  const [lead,setLead]=useState({name:"",location:"",type:"Buyer",source:"MVIP New Prospect"});
  const [agents,setAgents]=useState([]);const [expandedAgents,setExpandedAgents]=useState([]);const [showMore,setShowMore]=useState(false);const [status,setStatus]=useState("");const [loading,setLoading]=useState(false);const [rouletteOffer,setRouletteOffer]=useState(null);const [rouletteEvents,setRouletteEvents]=useState({});const [respondingAgent,setRespondingAgent]=useState(null);const [declineTarget,setDeclineTarget]=useState(null);const [declineReason,setDeclineReason]=useState("");const [declineBusy,setDeclineBusy]=useState(false);const [currentLead,setCurrentLead]=useState(null);
  const [locationSuggestions,setLocationSuggestions]=useState([]);const [suggestionsOpen,setSuggestionsOpen]=useState(false);const [suggestionsLoading,setSuggestionsLoading]=useState(false);const [selectedLocation,setSelectedLocation]=useState(null);
+ const [metrics,setMetrics]=useState([{n:"—",l:"Active leads",detail:"Loading live data…"},{n:"—",l:"Agents available",detail:"Loading live data…"},{n:"—",l:"Search readiness",detail:"Loading lead-source mix…"}]);
  useEffect(()=>{const query=lead.location.trim();if(query.length<3){setLocationSuggestions([]);setSuggestionsOpen(false);setSuggestionsLoading(false);return;}const controller=new AbortController();const timer=setTimeout(async()=>{setSuggestionsLoading(true);try{const url="https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=us&q="+encodeURIComponent(query);const response=await fetch(url,{headers:{Accept:"application/json"},signal:controller.signal});if(!response.ok)throw new Error("Location suggestions unavailable");const data=await response.json();setLocationSuggestions(Array.isArray(data)?data:[]);setSuggestionsOpen(true);}catch(error){if(error.name!=="AbortError")setLocationSuggestions([]);}finally{if(!controller.signal.aborted)setSuggestionsLoading(false);}},450);return()=>{clearTimeout(timer);controller.abort();};},[lead.location]);
  function chooseLocation(place){setLead(current=>({...current,location:place.display_name}));setSelectedLocation({latitude:Number(place.lat),longitude:Number(place.lon),label:place.display_name});setLocationSuggestions([]);setSuggestionsOpen(false);}
+ async function refreshMetrics(){
+  try{
+   const data=await api("dashboard_metrics");
+   setMetrics([
+    {n:Number(data.active_leads||0).toLocaleString(),l:"Active leads",detail:"Live open leads"},
+    {n:Number(data.active_agents||0).toLocaleString(),l:"Agents available",detail:"Active agent database records"},
+    {n:(Number(data.top_source_percent)||0)+"%",l:"Search readiness",detail:data.total_leads?("Top source: "+data.top_source+" · "+data.top_source_count+"/"+data.total_leads+" leads"):"No lead-source data yet"}
+   ]);
+  }catch(error){
+   setMetrics([
+    {n:"—",l:"Active leads",detail:"Live data unavailable"},
+    {n:"—",l:"Agents available",detail:"Live data unavailable"},
+    {n:"—",l:"Search readiness",detail:"Lead-source data unavailable"}
+   ]);
+  }
+ }
+ useEffect(()=>{refreshMetrics();},[]);
  const reduce=useReducedMotion();
  const isAdmin=["admin","superadmin"].includes(user?.role);
  async function submit(e){e.preventDefault();if(!lead.name.trim()){setStatus("Enter the lead name.");return;}if(!lead.location.trim()){setStatus("Enter a ZIP code, town, county, state, or location.");return;}if(!lead.type||!lead.source){setStatus("Select a lead type and lead source.");return;}setLoading(true);setStatus("Resolving county and checking assigned agent territories…");
@@ -154,6 +179,7 @@ function Dashboard({user,onLogout}){
    const matches=Array.isArray(d.agents)?d.agents:[];
    const wider=Array.isArray(d.expanded_agents)?d.expanded_agents:[];
    setCurrentLead(d.lead||null);
+   refreshMetrics();
    setAgents(matches.length?matches:wider);
    setExpandedAgents(matches.length?wider:[]);
    setRouletteOffer(d.roulette_offer||null);setRouletteEvents(Object.fromEntries((d.roulette_events||[]).map(event=>[event.agent_id,event])));
@@ -167,12 +193,15 @@ function Dashboard({user,onLogout}){
  async function respondToAgent(agent,decision,reason=""){const event=rouletteEvents[agent.id];if(!event?.id||respondingAgent||currentLead?.accepted_agent_id)return;setRespondingAgent(agent.id);try{const result=await api("respond_roulette_offer",{event_id:event.id,decision,decline_reason:reason});setRouletteEvents(current=>({...current,[agent.id]:result.event}));if(decision==="accepted"&&result.lead)setCurrentLead(current=>({...current,...result.lead}));setStatus(decision==="accepted"?agent.name+" accepted and is now assigned to this lead.":agent.name+" declined this lead; you can continue with another agent.");if(rouletteOffer?.id===event.id)setRouletteOffer(result.event);setDeclineTarget(null);setDeclineReason("");}catch(error){setStatus(error.message||"Could not record the agent response.");}finally{setRespondingAgent(null);setDeclineBusy(false);}}
  function submitDecline(e){e.preventDefault();if(!declineTarget||!declineReason.trim())return;setDeclineBusy(true);respondToAgent(declineTarget,"declined",declineReason.trim());}
  const rouletteModeNames={fair:"Fair Roulette",russian:"Russian Roulette",random:"Random Roulette",apex:"Apex Roulette",ascendancy:"Ascendancy Roulette"};
- const metrics=useMemo(()=>[{n:"24",l:"Active leads"},{n:"18",l:"Agents available"},{n:"96%",l:"Search readiness"}],[]);
  return <motion.div className="app" initial={reduce?false:"initial"} animate="animate" variants={pageVariants}>
   <aside className="rail"><div className="rail-logo">R.</div>{["⌂","⌕","◫","◉"].map((x,i)=><motion.div key={i} className={"rail-item "+(i===0?"active":"")} whileHover={{y:-2}} whileTap={{scale:.94}}>{x}</motion.div>)}<div className="rail-spacer"/><motion.button className="rail-item logout" onClick={onLogout} whileTap={{scale:.94}}>↪</motion.button></aside>
   <main className="workspace">
    <header className="topbar">
-    <div><span className="kicker">REMOTE PROFESSIONALS</span><h2>Lead workspace</h2></div>
+    <div className="workspace-heading"><div className="workspace-company-lockup" aria-label="Remote Professionals and Coldwell Banker">
+      <div className="company-logo remote-company"><span className="rp-symbol">RP</span><span className="rp-wordmark"><strong>REMOTE</strong><small>PROFESSIONALS</small></span></div>
+      <span className="company-separator" aria-hidden="true"></span>
+      <div className="company-logo coldwell-company"><span className="cb-symbol">CB</span><span className="cb-wordmark">Coldwell<br/>Banker</span></div>
+     </div><h2>Workspace</h2></div>
     <div className="workspace-tools">
      {isAdmin&&<nav className="admin-nav" aria-label="Administration">
       <a href="/Leads/">Leads</a><a href="/Agents/">Agent Profiles</a><a href="/Admin/">Import</a><a href="/Admin/Users/">Users</a><a href="/Areas/">Areas</a>
@@ -181,7 +210,7 @@ function Dashboard({user,onLogout}){
     </div>
    </header>
    <section className="hero"><div><h1>Find the right agent</h1></div><div className="hero-mark">R</div></section>
-   <section className="metrics">{metrics.map((m,i)=><motion.div className="metric" key={m.l} initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{...spring,delay:.08+i*.06}}><strong>{m.n}</strong><span>{m.l}</span></motion.div>)}</section>
+   <section className="metrics">{metrics.map((m,i)=><motion.div className="metric" key={m.l} initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{...spring,delay:.08+i*.06}}><strong>{m.n}</strong><span>{m.l}</span><small>{m.detail}</small></motion.div>)}</section>
    <motion.form className="lead-card" onSubmit={submit} layout transition={spring}>
     <div className="card-head"><div><span className="eyebrow">NEW LEAD</span><h3>Save lead & find agents</h3></div><span className="isa">ISA · {user?.display_name||"Current user"}</span></div>
     <div className="grid">
@@ -206,7 +235,7 @@ function App(){
  async function logout(){try{await api("logout")}catch{}localStorage.removeItem(SESSION_KEY);setUser(null);if(route!=="home")location.replace("/");}
  if(checking)return <div className="loading"><motion.div className="loader" animate={{scale:[.92,1.05,.92],opacity:[.55,1,.55]}} transition={{duration:1.1,repeat:Infinity,ease:"easeInOut"}}/></div>;
  if(route!=="home"){
-  const pages={admin:adminPage,users:usersPage,areas:areasPage,database:databasePage,agents:databasePage,leads:leadsPage};
+  const pages={admin:adminPage,users:usersPage,areas:areasPage,database:databasePage,agents:agentsPage,leads:leadsPage};
   return <LegacyPage html={pages[route]}/>;
  }
  return <AnimatePresence mode="wait">{user?<motion.div key="app" className="screen" initial={{opacity:0,scale:1.012}} animate={{opacity:1,scale:1}} transition={{duration:.55,ease}}><Dashboard user={user} onLogout={logout}/></motion.div>:<motion.div key="login" className="screen" initial={{opacity:0,scale:.995}} animate={{opacity:1,scale:1}} exit={{opacity:0,scale:1.012}} transition={{duration:.48,ease}}><Login onLogin={setUser}/></motion.div>}</AnimatePresence>
