@@ -3,8 +3,7 @@
 <head>\n<link rel="stylesheet" href="/crm-motion.css">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RPCPH CRM — Database</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>RPCPH CRM — Agent Profiles</title>
 <style>
 :root{--navy:#012169;--blue:#418FDE;--ink:#171b24;--muted:#788397;--line:rgba(255,255,255,.72);--glass:rgba(255,255,255,.34)}
 *{box-sizing:border-box}
@@ -78,6 +77,8 @@ tbody tr:last-child td{border-bottom:0}
 html.auth-pending body{visibility:hidden}
 
 .agent-history{margin-top:20px;padding-top:17px;border-top:1px solid rgba(1,33,105,.10)}.agent-history-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}.agent-history-head h3{font-size:14px;margin:0}.agent-history-head span{font-size:10px;color:#718096}.agent-history-table{max-height:330px;overflow:auto;border:1px solid rgba(1,33,105,.09);border-radius:9px;background:rgba(255,255,255,.42)}.agent-history-table table{min-width:650px}.agent-history-table th{position:sticky;top:0;background:#edf3fa}.agent-history-table td{font-size:10px}.agent-history-table td small{display:block;color:#7b8798;font-size:9px;margin-top:4px}.history-status{display:inline-flex;padding:5px 8px;border-radius:99px;font-size:9px;font-weight:800;background:#edf2f7;color:#526176}.history-status.accepted{background:#e4f4eb;color:#23734b}.history-status.declined{background:#fcebea;color:#a13b35}.decline-reason{max-width:200px;white-space:normal;line-height:1.4}.top-pick-history{color:#245b95!important;font-weight:800}
+
+.profile-editor{display:none;margin-top:18px;padding:16px;border:1px solid rgba(1,33,105,.12);border-radius:11px;background:rgba(255,255,255,.65)}.profile-editor.open{display:block}.profile-editor-head strong{display:block;font-size:13px}.profile-editor-head small{display:block;color:#778398;font-size:10px;margin-top:4px}.profile-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}.profile-edit-grid label{display:block;font-size:9px;letter-spacing:.7px;text-transform:uppercase;color:#718096;font-weight:800}.profile-edit-grid input,.profile-edit-grid select,.profile-edit-grid textarea{display:block;width:100%;margin-top:6px;min-height:39px;padding:9px 11px;border:1px solid rgba(1,33,105,.14);border-radius:8px;background:rgba(255,255,255,.84);color:#243449;font:inherit;font-size:11px;resize:vertical}.profile-edit-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:13px}.profile-edit-actions span{margin-right:auto;color:#788397;font-size:10px}@media(max-width:560px){.profile-edit-grid{grid-template-columns:1fr}.profile-edit-actions{flex-wrap:wrap}}
 </style>
 <script>document.documentElement.classList.add("auth-pending")</script><script src="/local-auth.js"></script>
 </head>
@@ -85,11 +86,11 @@ html.auth-pending body{visibility:hidden}
 <div class="page">
 <header class="topbar">
   <div class="brand"><div class="brandmark">R.</div><div>RPCPH CRM<small>DATABASE VIEW</small></div></div>
-  <div class="top-actions"><a class="linkbtn" href="/Areas/">⌖ Area Manager</a><a class="linkbtn" href="/">← Back to CRM</a><a class="linkbtn" href="/Admin/">⚙ Admin import</a></div>
+  <div class="top-actions"><a class="linkbtn" href="/Leads/">▤ Lead Listings</a><a class="linkbtn" href="/Areas/">⌖ Area Manager</a><a class="linkbtn" href="/Admin/">⚙ Admin import</a><a class="linkbtn" href="/">← Back to CRM</a></div>
 </header>
 <section class="intro">
-  <div><div class="eyebrow">Data / Directory records</div><h1>Database</h1><p class="lead">Browse the real-estate agent directory stored in Supabase. This page is read-only; records are managed through the Admin import workflow.</p></div>
-  <div class="readonly">READ ONLY · SUPABASE</div>
+  <div><div class="eyebrow">Directory / Agent management</div><h1>Agent Profiles</h1><p class="lead">Open any agent to review their contact details, edit their profile, and see the complete history of leads they accepted or declined.</p></div>
+  <div class="readonly">PROFILE MANAGEMENT · HISTORY</div>
 </section>
 <section class="stats">
   <div class="stat"><strong id="totalCount">—</strong><span>Total records visible to this page</span></div>
@@ -106,7 +107,7 @@ html.auth-pending body{visibility:hidden}
     <button class="btn" id="refreshBtn" type="button">↻ Refresh</button>
   </div>
   <div id="notice" class="notice"></div>
-  <div class="table-head"><strong>Agent records</strong><span id="resultLabel">Loading database…</span></div>
+  <div class="table-head"><strong>Agent profiles</strong><span id="resultLabel">Loading profiles…</span></div>
   <div class="table-wrap">
     <table>
       <thead><tr><th>Agent</th><th>Office / Brokerage</th><th>Email</th><th>Phone</th><th>Assigned areas</th><th>City / State</th><th>ZIP codes</th><th>Status</th><th>Created</th></tr></thead>
@@ -120,15 +121,22 @@ html.auth-pending body{visibility:hidden}
 
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
   <div class="dialog">
-    <div class="dialog-top"><div><h2 id="detailTitle">Agent details</h2><div class="dialog-sub" id="detailSub"></div></div><button class="close" id="closeModal" aria-label="Close">×</button></div>
-    <div class="details" id="details"></div><section class="agent-history"><div class="agent-history-head"><h3>Lead opportunity history</h3><span id="agentHistorySummary">Loading…</span></div><div class="agent-history-table" id="agentOpportunityHistory"><div class="empty">Loading agent activity…</div></div></section>
+    <div class="dialog-top"><div><h2 id="detailTitle">Agent profile</h2><div class="dialog-sub" id="detailSub"></div></div><div style="display:flex;gap:8px"><button class="btn primary" id="editProfileBtn" type="button">Edit profile</button><button class="close" id="closeModal" aria-label="Close">×</button></div></div>
+    <div class="details" id="details"></div>
+    <section class="profile-editor" id="profileEditor"><div class="profile-editor-head"><div><strong>Edit agent profile</strong><small>Changes are saved to the central agent directory.</small></div></div><div class="profile-edit-grid">
+      <label>Name<input id="editAgentName" maxlength="180"></label><label>Office / Brokerage<input id="editBrokerage" maxlength="180"></label>
+      <label>Email<input id="editEmail" type="email" maxlength="240"></label><label>Phone<input id="editPhone" maxlength="80"></label>
+      <label>City<input id="editCity" maxlength="120"></label><label>State<input id="editState" maxlength="120"></label>
+      <label>ZIP codes<textarea id="editZipCodes" rows="2" placeholder="Comma-separated ZIP codes"></textarea></label><label>Specialty<input id="editSpecialty" maxlength="180"></label>
+      <label>Original service-area text<textarea id="editServiceArea" rows="2"></textarea></label><label>Parsed service areas<textarea id="editServiceAreas" rows="2" placeholder="Comma-separated areas"></textarea></label>
+      <label>Status<select id="editActive"><option value="true">Active</option><option value="false">Inactive</option></select></label>
+    </div><div class="profile-edit-actions"><span id="profileEditStatus"></span><button class="btn" id="cancelProfileEdit" type="button">Cancel</button><button class="btn primary" id="saveProfileBtn" type="button">Save profile</button></div></section>
+    <section class="agent-history"><div class="agent-history-head"><h3>Lead opportunity history</h3><span id="agentHistorySummary">Loading…</span></div><div class="agent-history-table" id="agentOpportunityHistory"><div class="empty">Loading agent activity…</div></div></section>
   </div>
 </div>
 
 <script>
-const SUPABASE_URL="https://pfuomojvcuwbvqtzvglb.supabase.co";
-const SUPABASE_KEY="sb_publishable__W9mPIcJIZ7QDhzbKWNm_g_IsEMgMUt";
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let selectedAgent=null;
 const PAGE_SIZE=25;
 let page=0,total=0,currentRows=[];
 const $=id=>document.getElementById(id);
@@ -137,21 +145,8 @@ function showNotice(message,type="info"){const el=$("notice");el.textContent=mes
 function hideNotice(){$("notice").className="notice";}
 function formatDate(value){if(!value)return "—";const d=new Date(value);return Number.isNaN(d.getTime())?"—":d.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"});}
 function searchValue(){return $("search").value.trim().replace(/[^a-zA-Z0-9 @._+\-]/g," ").replace(/\s+/g," ").trim();}
-function makeQuery(){
- let q=db.from("real_estate_agents").select("*",{count:"exact"});
- const status=$("status").value;
- if(status==="active")q=q.eq("active",true);
- if(status==="inactive")q=q.eq("active",false);
- const term=searchValue();
- if(term){
-  const safe=term.replace(/[.]/g," ").replace(/\s+/g," ").trim();
-  const pattern="%"+safe+"%";
-  q=q.or("name.ilike."+pattern+",brokerage.ilike."+pattern+",email.ilike."+pattern+",phone.ilike."+pattern+",service_area.ilike."+pattern+",city.ilike."+pattern+",state.ilike."+pattern);
- }
- const sort=$("sort").value;
- if(sort==="name")q=q.order("name",{ascending:true});
- else q=q.order("created_at",{ascending:sort==="oldest",nullsFirst:false});
- return q.range(page*PAGE_SIZE,(page+1)*PAGE_SIZE-1);
+async function makeQuery(){
+ return await RPCPHAuth.api("agent_profiles",{search:searchValue(),status:$("status").value,sort:$("sort").value});
 }
 async function loadRows(){
  const btn=$("searchBtn"),refresh=$("refreshBtn");
@@ -159,13 +154,14 @@ async function loadRows(){
  $("rows").innerHTML='<tr><td colspan="9" class="empty">Loading records…</td></tr>';
  hideNotice();
  try{
-  const {data,error,count}=await makeQuery();
-  if(error)throw error;
-  currentRows=data||[];total=count||0;
+  const result=await makeQuery();
+  const data=result.agents||[];
+  total=data.length;
+  currentRows=data.slice(page*PAGE_SIZE,(page+1)*PAGE_SIZE);
   renderRows();
  }catch(error){
   currentRows=[];total=0;renderRows();
-  showNotice("Could not load the database: "+(error.message||"Supabase request failed")+". Check the Supabase connection and read policy.","warn");
+  showNotice("Could not load agent profiles: "+(error.message||"Request failed"),"warn");
  }finally{btn.disabled=false;refresh.disabled=false;}
 }
 function renderRows(){
@@ -211,6 +207,7 @@ async function loadAgentOpportunityHistory(agentId){
 }
 function openDetails(r){
  if(!r)return;
+ selectedAgent=r;
  $("detailTitle").textContent=r.name||"Unnamed agent";
  $("detailSub").textContent=(r.brokerage||"No office listed")+" · "+(r.active?"Active":"Inactive");
  const entries=[
@@ -220,9 +217,28 @@ function openDetails(r){
   ["Specialty",r.specialty],["Status",r.active?"Active":"Inactive"],["Created",r.created_at?new Date(r.created_at).toLocaleString():""]
  ];
  $("details").innerHTML=entries.map(([label,value])=>'<div class="detail"><label>'+esc(label)+'</label><div>'+esc(value||"—")+'</div></div>').join("");
+ $("profileEditor").classList.remove("open");$("profileEditStatus").textContent="";
+ $("editAgentName").value=r.name||"";$("editBrokerage").value=r.brokerage||"";$("editEmail").value=r.email||"";$("editPhone").value=r.phone||"";
+ $("editCity").value=r.city||"";$("editState").value=r.state||"";$("editZipCodes").value=Array.isArray(r.zip_codes)?r.zip_codes.join(", "):"";
+ $("editSpecialty").value=r.specialty||"";$("editServiceArea").value=r.service_area||"";$("editServiceAreas").value=Array.isArray(r.service_areas)?r.service_areas.join(", "):"";$("editActive").value=r.active?"true":"false";
  $("modal").classList.add("open");loadAgentOpportunityHistory(r.id);
 }
-function closeDetails(){$("modal").classList.remove("open");}
+function closeDetails(){$("modal").classList.remove("open");selectedAgent=null;}
+function toggleProfileEditor(open){$("profileEditor").classList.toggle("open",open);$("profileEditStatus").textContent="";}
+async function saveProfile(){
+ if(!selectedAgent)return;
+ const btn=$("saveProfileBtn");btn.disabled=true;$("profileEditStatus").textContent="Saving…";
+ try{
+  const result=await RPCPHAuth.api("update_agent_profile",{
+   agent_id:selectedAgent.id,name:$("editAgentName").value.trim(),brokerage:$("editBrokerage").value.trim(),email:$("editEmail").value.trim(),phone:$("editPhone").value.trim(),
+   city:$("editCity").value.trim(),state:$("editState").value.trim(),zip_codes:$("editZipCodes").value, specialty:$("editSpecialty").value.trim(),
+   service_area:$("editServiceArea").value.trim(),service_areas:$("editServiceAreas").value,active:$("editActive").value==="true"
+  });
+  selectedAgent=result.agent;
+  const index=currentRows.findIndex(x=>x.id===result.agent.id);if(index>=0)currentRows[index]=result.agent;
+  renderRows();openDetails(result.agent);showNotice("Agent profile saved.","info");
+ }catch(error){$("profileEditStatus").textContent=error.message||"Could not save profile.";}finally{btn.disabled=false;}
+}
 function csvCell(value){return '"'+String(value??"").replace(/"/g,'""')+'"';}
 function exportPage(){
  const columns=["id","name","brokerage","email","phone","service_area","service_areas","city","state","zip_codes","specialty","active","created_at"];
@@ -241,6 +257,9 @@ $("prevBtn").addEventListener("click",()=>{if(page>0){page--;loadRows();}});
 $("nextBtn").addEventListener("click",()=>{if((page+1)*PAGE_SIZE<total){page++;loadRows();}});
 $("exportBtn").addEventListener("click",exportPage);
 $("closeModal").addEventListener("click",closeDetails);
+$("editProfileBtn").addEventListener("click",()=>toggleProfileEditor(true));
+$("cancelProfileEdit").addEventListener("click",()=>toggleProfileEditor(false));
+$("saveProfileBtn").addEventListener("click",saveProfile);
 $("modal").addEventListener("click",event=>{if(event.target===$("modal"))closeDetails();});
 document.addEventListener("keydown",event=>{if(event.key==="Escape")closeDetails();});
 loadRows();
