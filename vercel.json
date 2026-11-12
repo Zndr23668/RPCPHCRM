@@ -2,15 +2,61 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/Login", "destination": "/" },
-    { "source": "/Login/", "destination": "/" },
-    { "source": "/Admin/Users", "destination": "/" },
-    { "source": "/Admin/Users/", "destination": "/" },
-    { "source": "/Admin", "destination": "/" },
-    { "source": "/Admin/", "destination": "/" },
-    { "source": "/Areas", "destination": "/" },
-    { "source": "/Areas/", "destination": "/" },
-    { "source": "/DB", "destination": "/" },
-    { "source": "/DB/", "destination": "/" }
+    {
+      "source": "/Leads",
+      "destination": "/"
+    },
+    {
+      "source": "/Leads/",
+      "destination": "/"
+    },
+    {
+      "source": "/Agents",
+      "destination": "/"
+    },
+    {
+      "source": "/Agents/",
+      "destination": "/"
+    },
+    {
+      "source": "/Login",
+      "destination": "/"
+    },
+    {
+      "source": "/Login/",
+      "destination": "/"
+    },
+    {
+      "source": "/Admin/Users",
+      "destination": "/"
+    },
+    {
+      "source": "/Admin/Users/",
+      "destination": "/"
+    },
+    {
+      "source": "/Admin",
+      "destination": "/"
+    },
+    {
+      "source": "/Admin/",
+      "destination": "/"
+    },
+    {
+      "source": "/Areas",
+      "destination": "/"
+    },
+    {
+      "source": "/Areas/",
+      "destination": "/"
+    },
+    {
+      "source": "/DB",
+      "destination": "/"
+    },
+    {
+      "source": "/DB/",
+      "destination": "/"
+    }
   ]
 }
