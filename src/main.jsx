@@ -141,14 +141,17 @@ function Dashboard({user,onLogout}){
  function chooseLocation(place){setLead(current=>({...current,location:place.display_name}));setSelectedLocation({latitude:Number(place.lat),longitude:Number(place.lon),label:place.display_name});setLocationSuggestions([]);setSuggestionsOpen(false);}
  const reduce=useReducedMotion();
  const isAdmin=["admin","superadmin"].includes(user?.role);
- async function submit(e){e.preventDefault();if(!lead.name.trim()){setStatus("Enter the lead name.");return;}if(!lead.location.trim()){setStatus("Enter a ZIP code, town, county, state, or location.");return;}if(!lead.type||!lead.source){setStatus("Select a lead type and lead source.");return;}setLoading(true);setStatus("Finding agents within 20 miles…");
+ async function submit(e){e.preventDefault();if(!lead.name.trim()){setStatus("Enter the lead name.");return;}if(!lead.location.trim()){setStatus("Enter a ZIP code, town, county, state, or location.");return;}if(!lead.type||!lead.source){setStatus("Select a lead type and lead source.");return;}setLoading(true);setStatus("Resolving county and checking assigned agent territories…");
   try{
    let origin=selectedLocation&&selectedLocation.label===lead.location.trim()?selectedLocation:null;
    if(!origin){const geo=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&countrycodes=us&q="+encodeURIComponent(lead.location.trim()),{headers:{"Accept":"application/json"}});const places=await geo.json();if(!places?.length)throw new Error("Location not found. Choose a suggested location or try a ZIP code, town, county, or city and state.");origin={latitude:Number(places[0].lat),longitude:Number(places[0].lon),label:places[0].display_name};}
    const d=await api("create_lead",{lead_name:lead.name.trim(),town_or_county:lead.location.trim(),county_used:lead.location.trim(),target_county:lead.location.trim(),target_location:lead.location.trim(),target_latitude:origin.latitude,target_longitude:origin.longitude,radius_miles:20,lead_type:lead.type.toLowerCase(),lead_source:lead.source});
    const milesBetween=(lat1,lon1,lat2,lon2)=>{const rad=x=>x*Math.PI/180;const dLat=rad(lat2-lat1),dLon=rad(lon2-lon1);const h=Math.sin(dLat/2)**2+Math.cos(rad(lat1))*Math.cos(rad(lat2))*Math.sin(dLon/2)**2;return 3958.7613*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));};
    const within20=(d.agents||[]).map(a=>{const direct=Number(a.distance_miles??a.distance??NaN);const lat=Number(a.latitude??a.lat??a.agent_latitude??NaN);const lon=Number(a.longitude??a.lng??a.lon??a.agent_longitude??NaN);const distance=Number.isFinite(direct)?direct:(Number.isFinite(lat)&&Number.isFinite(lon)?milesBetween(origin.latitude,origin.longitude,lat,lon):NaN);return {...a,distance_miles:distance};}).filter(a=>Number.isFinite(a.distance_miles)&&a.distance_miles<=20).sort((a,b)=>a.distance_miles-b.distance_miles);
-   setAgents(within20);setStatus(within20.length?within20.length+" agent(s) found within 20 miles of "+origin.label:"No agents found within 20 miles.");
+   const matches=Array.isArray(d.agents)?d.agents:[];
+   setAgents(matches);
+   if(d.match_warning)setStatus("Lead saved. "+d.match_warning);
+   else setStatus(matches.length?matches.length+" agent(s) assigned to "+(d.matched_county||"the selected county"):"Lead saved. No active agents are assigned to "+(d.matched_county||"the resolved county")+".");
   }catch(err){setStatus(err.message||"Could not search for agents");}finally{setLoading(false)}
  }
  const metrics=useMemo(()=>[{n:"24",l:"Active leads"},{n:"18",l:"Agents available"},{n:"96%",l:"Search readiness"}],[]);
@@ -164,7 +167,7 @@ function Dashboard({user,onLogout}){
      <div className="user"><span>{user?.display_name||"CRM User"} · {user?.role||"employee"}</span><button onClick={onLogout}>Sign out</button></div>
     </div>
    </header>
-   <section className="hero"><div><span className="eyebrow">EMPLOYEE SEARCH</span><h1>Find the right agent,<br/><em>without slowing down.</em></h1><p>Enter the lead once. RPCPH CRM saves the lead under your identity and returns agents serving the target area.</p></div><div className="hero-mark">R</div></section>
+   <section className="hero"><div><span className="eyebrow">EMPLOYEE SEARCH</span><h1>Find the right agent,<br/><em>without slowing down.</em></h1><p>Enter the lead once. RPCPH CRM saves it under your identity and matches agents using their verified territory assignments.</p></div><div className="hero-mark">R</div></section>
    <section className="metrics">{metrics.map((m,i)=><motion.div className="metric" key={m.l} initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{...spring,delay:.08+i*.06}}><strong>{m.n}</strong><span>{m.l}</span></motion.div>)}</section>
    <motion.form className="lead-card" onSubmit={submit} layout transition={spring}>
     <div className="card-head"><div><span className="eyebrow">NEW LEAD</span><h3>Save lead & find agents</h3></div><span className="isa">ISA · {user?.display_name||"Current user"}</span></div>
@@ -174,9 +177,9 @@ function Dashboard({user,onLogout}){
      <Select label="Lead type" value={lead.type} onChange={v=>setLead({...lead,type:v})} options={["Buyer","Seller","Investor","Land"]}/>
      <Select label="Lead source" value={lead.source} onChange={v=>setLead({...lead,source:v})} options={["MVIP New Prospect","MVIP BLA","MVIP Prio CB","Rocket Mortgage","Website","Internet Call","Cold Call","Other"]}/>
     </div>
-    <div className="actions"><span>{status||"Press Enter to search active agents within 20 miles."}</span><motion.button type="submit" className="primary action" disabled={loading} whileHover={{scale:1.015}} whileTap={{scale:.985}}>{loading?"Searching…":"Save Lead & Find Agents"}</motion.button></div>
+    <div className="actions"><span>{status||"Press Enter to find agents assigned to the selected county."}</span><motion.button type="submit" className="primary action" disabled={loading} whileHover={{scale:1.015}} whileTap={{scale:.985}}>{loading?"Searching…":"Save Lead & Find Agents"}</motion.button></div>
    </motion.form>
-   <AnimatePresence mode="popLayout"><motion.section className="results" layout initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} transition={spring}>{agents.length>0&&<><div className="results-head"><div><span className="eyebrow">MATCHES</span><h3>Available agents</h3></div><span>{agents.length} result{agents.length===1?"":"s"}</span></div>{agents.map((a,i)=><motion.article className="agent" key={a.id||i} layout initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} transition={{...spring,delay:i*.05}} whileHover={{y:-3}}><div className="agent-avatar">{String(a.name||"A").split(" ").map(x=>x[0]).slice(0,2).join("")}</div><div><h4>{a.name}</h4><p>{a.brokerage||"Independent agent"}</p><small>{a.service_area||a.service_areas?.join(", ")||"Service area available"}{a.distance_miles!=null&&" · "+a.distance_miles.toFixed(1)+" mi"}</small></div></motion.article>)}</>}</motion.section></AnimatePresence>
+   <AnimatePresence mode="popLayout"><motion.section className="results" layout initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} transition={spring}>{agents.length>0&&<><div className="results-head"><div><span className="eyebrow">MATCHES</span><h3>Available agents</h3></div><span>{agents.length} result{agents.length===1?"":"s"}</span></div>{agents.map((a,i)=><motion.article className="agent" key={a.id||i} layout initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} transition={{...spring,delay:i*.05}} whileHover={{y:-3}}><div className="agent-avatar">{String(a.name||"A").split(" ").map(x=>x[0]).slice(0,2).join("")}</div><div><h4>{a.name}</h4><p>{a.brokerage||"Independent agent"}</p><small>{a.match_reason||a.service_area||a.service_areas?.join(", ")||"Service area available"}</small></div></motion.article>)}</>}</motion.section></AnimatePresence>
   </main>
  </motion.div>
 }
