@@ -85,6 +85,14 @@ async function load(){
   const declines=allLeads.reduce((n,x)=>n+(x.activity||[]).filter(e=>e.status==="declined").length,0);
   $("totalCount").textContent=allLeads.length.toLocaleString();$("assignedCount").textContent=assigned.toLocaleString();$("openCount").textContent=(allLeads.length-assigned).toLocaleString();$("declineCount").textContent=declines.toLocaleString();
   render();
+  const linkedLeadId=new URLSearchParams(window.location.search).get("lead_id");
+  if(linkedLeadId){
+    const linkedIndex=filtered.findIndex(lead=>lead.id===linkedLeadId);
+    if(linkedIndex>=0){
+      const detail=document.querySelector('[data-detail="'+linkedIndex+'"]');
+      if(detail){detail.hidden=false;detail.scrollIntoView({behavior:"smooth",block:"center"});}
+    }else notify("The linked lead is not in the current listing.","info");
+  }
  }catch(error){allLeads=[];render();notify(error.message||"Could not load lead listings.","warn");}
  finally{$("refreshBtn").disabled=false;$("searchBtn").disabled=false;}
 }
