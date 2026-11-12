@@ -141,6 +141,60 @@ function Login({onLogin}){
 
 function Field({label,value,onChange,placeholder}){return <label className="field"><span>{label}</span><input value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}/></label>}
 function Select({label,value,onChange,options}){return <label className="field"><span>{label}</span><select value={value} onChange={e=>onChange(e.target.value)}>{options.map(x=><option key={x}>{x}</option>)}</select></label>}
+const NAV_ICON_PATHS={
+ search:<><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></>,
+ leads:<><rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M8 9h8M8 13h5M8 17h8"/></>,
+ agents:<><circle cx="9" cy="8" r="3"/><path d="M3.5 19c.4-3.2 2.2-5 5.5-5s5.1 1.8 5.5 5M16 5.5a3 3 0 0 1 0 5.8M17 14c2.2.3 3.3 2 3.5 4.5"/></>,
+ areas:<><path d="m12 21-5.2-5.2a7.4 7.4 0 1 1 10.4 0L12 21Z"/><circle cx="12" cy="10" r="2.2"/></>,
+ import:<><path d="M12 15V3m-4 4 4-4 4 4"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></>,
+ users:<><path d="M16 21v-1.8a4.2 4.2 0 0 0-4.2-4.2H7.2A4.2 4.2 0 0 0 3 19.2V21"/><circle cx="9.5" cy="7.5" r="3.5"/><path d="M17 11.2a3.5 3.5 0 0 0 0-6.8M17 15h.8a3.2 3.2 0 0 1 3.2 3.2V21"/></>,
+ database:<><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7"/></>,
+ folder:<><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H10l2 2h6.5A2.5 2.5 0 0 1 21 9.5v8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/><path d="M3 10h18"/></>,
+ settings:<><circle cx="12" cy="12" r="3.5"/><path d="M19.4 13.5a7.8 7.8 0 0 0 0-3l1.3-1-1.5-2.6-1.5.6a7.8 7.8 0 0 0-2.6-1.5L14.9 4h-3l-.3 2a7.8 7.8 0 0 0-2.6 1.5l-1.5-.6L6 9.5l1.3 1a7.8 7.8 0 0 0 0 3L6 14.5l1.5 2.6 1.5-.6a7.8 7.8 0 0 0 2.6 1.5l.3 2h3l.3-2a7.8 7.8 0 0 0 2.6-1.5l1.5.6 1.5-2.6z"/></>,
+ logout:<><path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></>,
+ chevron:<path d="m7 10 5 5 5-5"/>
+};
+function NavIcon({name}){return <svg className="crm-nav-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round">{NAV_ICON_PATHS[name]||NAV_ICON_PATHS.folder}</svg>}
+function Sidebar({user,active,onLogout}){
+ const isAdmin=["admin","superadmin"].includes(user?.role);
+ const [expanded,setExpanded]=useState({directory:["agents","areas"].includes(active),administration:["admin","users","database"].includes(active)});
+ const toggle=key=>setExpanded(current=>({...current,[key]:!current[key]}));
+ const item=(id,label,href,icon)=><a className={"crm-nav-link "+(active===id?"active":"")} href={href} title={label} aria-current={active===id?"page":undefined} key={id}><NavIcon name={icon}/><span>{label}</span></a>;
+ return <aside className="crm-sidebar" aria-label="CRM sidebar">
+  <a className="crm-side-brand" href="/" aria-label="RPCPH CRM home"><span className="crm-side-mark">R.</span><span className="crm-side-brand-copy"><strong>RPCPH CRM</strong><small>WORKSPACE</small></span></a>
+  <nav className="crm-side-nav" aria-label="Main navigation">
+   <div className="crm-nav-caption">WORKSPACE</div>
+   {item("home","Search","/","search")}
+   {isAdmin&&<>
+    <div className="crm-nav-divider"/>
+    <div className="crm-nav-caption">OPERATIONS</div>
+    {item("leads","Lead Listings","/Leads/","leads")}
+    <div className="crm-nav-divider"/>
+    <div className="crm-nav-caption">MANAGE</div>
+    <button className={"crm-nav-group-toggle "+(["agents","areas"].includes(active)?"has-active":"")} type="button" onClick={()=>toggle("directory")} aria-expanded={expanded.directory} aria-controls="crm-directory-subnav" title="Directory">
+     <NavIcon name="agents"/><span>Directory</span><NavIcon name="chevron"/>
+    </button>
+    {expanded.directory&&<div className="crm-nav-subnav" id="crm-directory-subnav">
+     {item("agents","Agent Profiles","/Agents/","agents")}
+     {item("areas","Area Manager","/Areas/","areas")}
+    </div>}
+    <button className={"crm-nav-group-toggle "+(["admin","users","database"].includes(active)?"has-active":"")} type="button" onClick={()=>toggle("administration")} aria-expanded={expanded.administration} aria-controls="crm-admin-subnav" title="Administration">
+     <NavIcon name="settings"/><span>Administration</span><NavIcon name="chevron"/>
+    </button>
+    {expanded.administration&&<div className="crm-nav-subnav" id="crm-admin-subnav">
+     {item("admin","Import directory","/Admin/","import")}
+     {item("users","User access","/Admin/Users/","users")}
+     {item("database","Database","/DB/","database")}
+    </div>}
+   </>}
+  </nav>
+  <div className="crm-sidebar-footer">
+   <div className="crm-sidebar-user"><span className="crm-user-avatar">{String(user?.display_name||"U").trim().split(" ").filter(Boolean).map(x=>x[0]).slice(0,2).join("").toUpperCase()}</span><span className="crm-user-copy"><strong>{user?.display_name||"CRM User"}</strong><small>{user?.role||"Employee"}</small></span></div>
+   <button className="crm-signout" type="button" onClick={onLogout} title="Sign out"><NavIcon name="logout"/><span>Sign out</span></button>
+  </div>
+ </aside>;
+}
+
 
 function Dashboard({user,onLogout}){
  const [lead,setLead]=useState({name:"",location:"",type:"Buyer",source:"MVIP New Prospect"});
@@ -194,7 +248,7 @@ function Dashboard({user,onLogout}){
  function submitDecline(e){e.preventDefault();if(!declineTarget||!declineReason.trim())return;setDeclineBusy(true);respondToAgent(declineTarget,"declined",declineReason.trim());}
  const rouletteModeNames={fair:"Fair Roulette",russian:"Russian Roulette",random:"Random Roulette",apex:"Apex Roulette",ascendancy:"Ascendancy Roulette"};
  return <motion.div className="app" initial={reduce?false:"initial"} animate="animate" variants={pageVariants}>
-  <aside className="rail"><div className="rail-logo">R.</div>{["⌂","⌕","◫","◉"].map((x,i)=><motion.div key={i} className={"rail-item "+(i===0?"active":"")} whileHover={{y:-2}} whileTap={{scale:.94}}>{x}</motion.div>)}<div className="rail-spacer"/><motion.button className="rail-item logout" onClick={onLogout} whileTap={{scale:.94}}>↪</motion.button></aside>
+  <Sidebar user={user} active="home" onLogout={onLogout}/>
   <main className="workspace">
    <header className="topbar">
     <div className="workspace-heading"><div className="workspace-company-lockup" aria-label="Remote Professionals and Coldwell Banker">
@@ -202,13 +256,7 @@ function Dashboard({user,onLogout}){
       <span className="company-separator" aria-hidden="true"></span>
       <div className="company-logo coldwell-company"><span className="cb-symbol">CB</span><span className="cb-wordmark">Coldwell<br/>Banker</span></div>
      </div><h2>Workspace</h2></div>
-    <div className="workspace-tools">
-     {isAdmin&&<nav className="admin-nav" aria-label="Administration">
-      <a href="/Leads/">Leads</a><a href="/Agents/">Agent Profiles</a><a href="/Admin/">Import</a><a href="/Admin/Users/">Users</a><a href="/Areas/">Areas</a>
-     </nav>}
-     <div className="user"><span>{user?.display_name||"CRM User"} · {user?.role||"employee"}</span><button onClick={onLogout}>Sign out</button></div>
-    </div>
-   </header>
+    <div className="workspace-tools"><div className="user"><span>{user?.display_name||"CRM User"} · {user?.role||"employee"}</span></div></div>\n   </header>
    <section className="hero"><div><h1>Find the right agent</h1></div><div className="hero-mark">R</div></section>
    <section className="metrics">{metrics.map((m,i)=><motion.div className="metric" key={m.l} initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{...spring,delay:.08+i*.06}}><strong>{m.n}</strong><span>{m.l}</span><small>{m.detail}</small></motion.div>)}</section>
    <motion.form className="lead-card" onSubmit={submit} layout transition={spring}>
@@ -236,7 +284,7 @@ function App(){
  if(checking)return <div className="loading"><motion.div className="loader" animate={{scale:[.92,1.05,.92],opacity:[.55,1,.55]}} transition={{duration:1.1,repeat:Infinity,ease:"easeInOut"}}/></div>;
  if(route!=="home"){
   const pages={admin:adminPage,users:usersPage,areas:areasPage,database:databasePage,agents:agentsPage,leads:leadsPage};
-  return <LegacyPage html={pages[route]}/>;
+  return <div className="crm-route-layout"><Sidebar user={user} active={route} onLogout={logout}/><div className="crm-route-content"><LegacyPage html={pages[route]}/></div></div>;
  }
  return <AnimatePresence mode="wait">{user?<motion.div key="app" className="screen" initial={{opacity:0,scale:1.012}} animate={{opacity:1,scale:1}} transition={{duration:.55,ease}}><Dashboard user={user} onLogout={logout}/></motion.div>:<motion.div key="login" className="screen" initial={{opacity:0,scale:.995}} animate={{opacity:1,scale:1}} exit={{opacity:0,scale:1.012}} transition={{duration:.48,ease}}><Login onLogin={setUser}/></motion.div>}</AnimatePresence>
 }
