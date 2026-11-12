@@ -135,7 +135,7 @@ function Select({label,value,onChange,options}){return <label className="field">
 
 function Dashboard({user,onLogout}){
  const [lead,setLead]=useState({name:"",location:"",type:"Buyer",source:"MVIP New Prospect"});
- const [agents,setAgents]=useState([]);const [status,setStatus]=useState("");const [loading,setLoading]=useState(false);
+ const [agents,setAgents]=useState([]);const [expandedAgents,setExpandedAgents]=useState([]);const [showMore,setShowMore]=useState(false);const [status,setStatus]=useState("");const [loading,setLoading]=useState(false);
  const [locationSuggestions,setLocationSuggestions]=useState([]);const [suggestionsOpen,setSuggestionsOpen]=useState(false);const [suggestionsLoading,setSuggestionsLoading]=useState(false);const [selectedLocation,setSelectedLocation]=useState(null);
  useEffect(()=>{const query=lead.location.trim();if(query.length<3){setLocationSuggestions([]);setSuggestionsOpen(false);setSuggestionsLoading(false);return;}const controller=new AbortController();const timer=setTimeout(async()=>{setSuggestionsLoading(true);try{const url="https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=us&q="+encodeURIComponent(query);const response=await fetch(url,{headers:{Accept:"application/json"},signal:controller.signal});if(!response.ok)throw new Error("Location suggestions unavailable");const data=await response.json();setLocationSuggestions(Array.isArray(data)?data:[]);setSuggestionsOpen(true);}catch(error){if(error.name!=="AbortError")setLocationSuggestions([]);}finally{if(!controller.signal.aborted)setSuggestionsLoading(false);}},450);return()=>{clearTimeout(timer);controller.abort();};},[lead.location]);
  function chooseLocation(place){setLead(current=>({...current,location:place.display_name}));setSelectedLocation({latitude:Number(place.lat),longitude:Number(place.lon),label:place.display_name});setLocationSuggestions([]);setSuggestionsOpen(false);}
@@ -149,9 +149,14 @@ function Dashboard({user,onLogout}){
    const milesBetween=(lat1,lon1,lat2,lon2)=>{const rad=x=>x*Math.PI/180;const dLat=rad(lat2-lat1),dLon=rad(lon2-lon1);const h=Math.sin(dLat/2)**2+Math.cos(rad(lat1))*Math.cos(rad(lat2))*Math.sin(dLon/2)**2;return 3958.7613*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));};
    const within20=(d.agents||[]).map(a=>{const direct=Number(a.distance_miles??a.distance??NaN);const lat=Number(a.latitude??a.lat??a.agent_latitude??NaN);const lon=Number(a.longitude??a.lng??a.lon??a.agent_longitude??NaN);const distance=Number.isFinite(direct)?direct:(Number.isFinite(lat)&&Number.isFinite(lon)?milesBetween(origin.latitude,origin.longitude,lat,lon):NaN);return {...a,distance_miles:distance};}).filter(a=>Number.isFinite(a.distance_miles)&&a.distance_miles<=20).sort((a,b)=>a.distance_miles-b.distance_miles);
    const matches=Array.isArray(d.agents)?d.agents:[];
-   setAgents(matches);
+   const wider=Array.isArray(d.expanded_agents)?d.expanded_agents:[];
+   setAgents(matches.length?matches:wider);
+   setExpandedAgents(matches.length?wider:[]);
+   setShowMore(false);
    if(d.match_warning)setStatus("Lead saved. "+d.match_warning);
-   else setStatus(matches.length?matches.length+" agent(s) assigned to "+(d.matched_county||"the selected county"):"Lead saved. No active agents are assigned to "+(d.matched_county||"the resolved county")+".");
+   else if(matches.length)setStatus(matches.length+" exact county match(es) for "+(d.matched_county||"the selected county")+". Wider state coverage is available below.");
+   else if(wider.length)setStatus("No exact county assignment. Showing "+wider.length+" agents with wider state coverage.");
+   else setStatus("Lead saved. No active agents are assigned in this county or elsewhere in the state.");
   }catch(err){setStatus(err.message||"Could not search for agents");}finally{setLoading(false)}
  }
  const metrics=useMemo(()=>[{n:"24",l:"Active leads"},{n:"18",l:"Agents available"},{n:"96%",l:"Search readiness"}],[]);
@@ -179,7 +184,7 @@ function Dashboard({user,onLogout}){
     </div>
     <div className="actions"><span>{status||"Press Enter to find agents assigned to the selected county."}</span><motion.button type="submit" className="primary action" disabled={loading} whileHover={{scale:1.015}} whileTap={{scale:.985}}>{loading?"Searching…":"Save Lead & Find Agents"}</motion.button></div>
    </motion.form>
-   <AnimatePresence mode="popLayout"><motion.section className="results" layout initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} transition={spring}>{agents.length>0&&<><div className="results-head"><div><span className="eyebrow">MATCHES</span><h3>Available agents</h3></div><span>{agents.length} result{agents.length===1?"":"s"}</span></div>{agents.map((a,i)=><motion.article className="agent" key={a.id||i} layout initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} transition={{...spring,delay:i*.05}} whileHover={{y:-3}}><div className="agent-avatar">{String(a.name||"A").split(" ").map(x=>x[0]).slice(0,2).join("")}</div><div><h4>{a.name}</h4><p>{a.brokerage||"Independent agent"}</p><small>{a.match_reason||a.service_area||a.service_areas?.join(", ")||"Service area available"}</small></div></motion.article>)}</>}</motion.section></AnimatePresence>
+   <AnimatePresence mode="popLayout"><motion.section className="results" layout initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} transition={spring}>{agents.length>0&&<><div className="results-head"><div><span className="eyebrow">SMART AGENT FINDER</span><h3>{agents[0]?.match_level==="statewide"?"Wider coverage agents":"Exact county matches"}</h3></div><span>{agents.length+(showMore?expandedAgents.length:0)} result{agents.length+(showMore?expandedAgents.length:0)===1?"":"s"}</span></div>{[...agents,...(showMore?expandedAgents:[])].map((a,i)=><motion.article className="agent" key={a.id||i} layout initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} transition={{...spring,delay:i*.035}} whileHover={{y:-3}}><div className="agent-avatar">{String(a.name||"A").split(" ").map(x=>x[0]).slice(0,2).join("")}</div><div><h4>{a.name}</h4><p>{a.brokerage||"Independent agent"}</p><small>{a.match_reason||a.service_area||a.service_areas?.join(", ")||"Service area available"}</small></div></motion.article>)}{expandedAgents.length>0&&<button type="button" className="primary action" style={{marginTop:16}} onClick={()=>setShowMore(v=>!v)}>{showMore?"Show fewer agents":`Show more agents · +${expandedAgents.length}`}</button>}</>}</motion.section></AnimatePresence>
   </main>
  </motion.div>
 }
