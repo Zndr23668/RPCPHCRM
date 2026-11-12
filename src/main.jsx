@@ -145,7 +145,8 @@ function Dashboard({user,onLogout}){
    if(!places?.length)throw new Error("Location not found. Try a ZIP code, town, county, or city and state.");
    const origin={latitude:Number(places[0].lat),longitude:Number(places[0].lon),label:places[0].display_name};
    const d=await api("create_lead",{lead_name:lead.name,target_location:lead.location.trim(),target_latitude:origin.latitude,target_longitude:origin.longitude,radius_miles:20,lead_type:lead.type,lead_source:lead.source});
-   const within20=(d.agents||[]).map(a=>{const distance=Number(a.distance_miles??a.distance??NaN);return {...a,distance_miles:Number.isFinite(distance)?distance:null};}).filter(a=>a.distance_miles==null||a.distance_miles<=20).sort((a,b)=>(a.distance_miles??Infinity)-(b.distance_miles??Infinity));
+   const milesBetween=(lat1,lon1,lat2,lon2)=>{const rad=x=>x*Math.PI/180;const dLat=rad(lat2-lat1),dLon=rad(lon2-lon1);const h=Math.sin(dLat/2)**2+Math.cos(rad(lat1))*Math.cos(rad(lat2))*Math.sin(dLon/2)**2;return 3958.7613*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));};
+   const within20=(d.agents||[]).map(a=>{const direct=Number(a.distance_miles??a.distance??NaN);const lat=Number(a.latitude??a.lat??a.agent_latitude??NaN);const lon=Number(a.longitude??a.lng??a.lon??a.agent_longitude??NaN);const distance=Number.isFinite(direct)?direct:(Number.isFinite(lat)&&Number.isFinite(lon)?milesBetween(origin.latitude,origin.longitude,lat,lon):NaN);return {...a,distance_miles:distance};}).filter(a=>Number.isFinite(a.distance_miles)&&a.distance_miles<=20).sort((a,b)=>a.distance_miles-b.distance_miles);
    setAgents(within20);setStatus(within20.length?within20.length+" agent(s) found within 20 miles of "+origin.label:"No agents found within 20 miles.");
   }catch(err){setStatus(err.message||"Could not search for agents");}finally{setLoading(false)}
  }
@@ -168,7 +169,7 @@ function Dashboard({user,onLogout}){
     <div className="card-head"><div><span className="eyebrow">NEW LEAD</span><h3>Save lead & find agents</h3></div><span className="isa">ISA · {user?.display_name||"Current user"}</span></div>
     <div className="grid">
      <Field label="Lead name" value={lead.name} onChange={v=>setLead({...lead,name:v})} placeholder="Client name"/>
-     <label className="field location-field"><span>What are you looking for?</span><input value={lead.location} onChange={e=>setLead({...lead,location:e.target.value})} placeholder="ZIP code, town, county, or location" autoComplete="off"/></label>
+     <label className="field location-field"><span>What are you looking for?</span><input value={lead.location} onChange={e=>setLead({...lead,location:e.target.value})} placeholder="County, town, state, ZIP code, or city" autoComplete="off"/></label>
      <Select label="Lead type" value={lead.type} onChange={v=>setLead({...lead,type:v})} options={["Buyer","Seller","Investor","Land"]}/>
      <Select label="Lead source" value={lead.source} onChange={v=>setLead({...lead,source:v})} options={["MVIP New Prospect","MVIP BLA","MVIP Prio CB","Rocket Mortgage","Website","Internet Call","Cold Call","Other"]}/>
     </div>
