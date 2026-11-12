@@ -62,3 +62,32 @@
  .company-separator{height:26px}
  .login-company-lockup{gap:8px}
 }
+
+/* Reliable document scrolling across the dashboard and legacy workspaces.
+   Keep vertical scrolling on the document viewport instead of body overflow. */
+html{
+ width:100%;
+ min-height:100%;
+ overflow-x:clip;
+ overflow-y:auto;
+ scroll-behavior:smooth;
+ scrollbar-gutter:stable;
+ overscroll-behavior-y:auto;
+}
+body{
+ width:100%;
+ min-height:100vh;
+ height:auto;
+ overflow-x:clip;
+ overflow-y:visible;
+ overscroll-behavior-y:auto;
+ touch-action:pan-y pinch-zoom;
+}
+#root,.screen,.app,.legacy-screen{
+ min-height:100vh;
+ height:auto;
+ overflow:visible;
+}
+.profile-modal-body,.history-wrap,.table-wrap,.dialog{
+ -webkit-overflow-scrolling:touch;
+}
