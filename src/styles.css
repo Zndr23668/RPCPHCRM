@@ -91,3 +91,71 @@ body{
 .profile-modal-body,.history-wrap,.table-wrap,.dialog{
  -webkit-overflow-scrolling:touch;
 }
+
+
+/* Unified CRM navigation */
+.app{grid-template-columns:260px minmax(0,1fr)}
+.crm-route-layout{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh;align-items:start}
+.crm-route-content{min-width:0;min-height:100vh}
+.crm-route-content .page{max-width:none}
+.crm-route-content .top-actions,.crm-route-content .links{display:none!important}
+.crm-sidebar{position:sticky;top:0;align-self:start;z-index:50;display:flex;flex-direction:column;width:260px;height:100vh;max-height:100vh;min-height:100vh;overflow-y:auto;overscroll-behavior:contain;padding:22px 15px 16px;background:rgba(246,249,253,.82);border-right:1px solid rgba(255,255,255,.88);box-shadow:inset -1px 0 rgba(1,33,105,.035);backdrop-filter:blur(26px) saturate(175%);-webkit-backdrop-filter:blur(26px) saturate(175%);scrollbar-width:thin;scrollbar-color:rgba(70,98,135,.22) transparent}
+.crm-sidebar::-webkit-scrollbar{width:5px}
+.crm-sidebar::-webkit-scrollbar-thumb{background:rgba(70,98,135,.2);border-radius:99px}
+.crm-side-brand{display:flex;align-items:center;gap:12px;min-height:48px;margin:0 3px 30px;padding:2px 5px;color:#152b49;text-decoration:none}
+.crm-side-mark{width:42px;height:42px;flex:none;display:grid;place-items:center;border-radius:13px;background:#061f4c;color:#fff;font-size:17px;font-weight:850;letter-spacing:-1px;box-shadow:0 7px 16px rgba(1,33,105,.14)}
+.crm-side-brand-copy{display:grid;gap:3px;min-width:0}
+.crm-side-brand-copy strong{font-size:13px;font-weight:850;letter-spacing:-.3px}
+.crm-side-brand-copy small{font-size:8px;letter-spacing:1.7px;font-weight:800;color:#7c8da4}
+.crm-side-nav{display:grid;align-content:start;gap:5px}
+.crm-nav-caption{padding:0 12px;margin:8px 0 4px;font-size:8px;font-weight:850;letter-spacing:1.45px;color:#91a0b3}
+.crm-nav-divider{height:1px;margin:12px 8px 6px;background:rgba(1,33,105,.075)}
+.crm-nav-icon{width:19px;height:19px;flex:none;transition:transform .28s cubic-bezier(.16,1,.3,1)}
+.crm-nav-link,.crm-nav-group-toggle{width:100%;min-height:44px;display:flex;align-items:center;gap:12px;padding:0 12px;border:0;border-radius:12px;background:transparent;color:#5d708a;text-decoration:none;text-align:left;font:inherit;font-size:11px;font-weight:680;cursor:pointer;transition:background .24s cubic-bezier(.16,1,.3,1),color .24s,transform .24s,box-shadow .24s}
+.crm-nav-link:hover,.crm-nav-group-toggle:hover{background:rgba(1,33,105,.055);color:#173b69}
+.crm-nav-link:active,.crm-nav-group-toggle:active{transform:scale(.985)}
+.crm-nav-link:focus-visible,.crm-nav-group-toggle:focus-visible,.crm-signout:focus-visible{outline:2px solid #418FDE;outline-offset:2px}
+.crm-nav-link.active{background:linear-gradient(115deg,rgba(1,33,105,.12),rgba(65,143,222,.09));color:#082b61;box-shadow:inset 3px 0 #123d78,inset 0 0 0 1px rgba(1,33,105,.055);font-weight:820}
+.crm-nav-link.active .crm-nav-icon{color:#123d78}
+.crm-nav-group-toggle>span{flex:1;min-width:0}
+.crm-nav-group-toggle.has-active{color:#173d6c}
+.crm-nav-group-toggle[aria-expanded=true] .crm-nav-icon:last-child{transform:rotate(180deg)}
+.crm-nav-group-toggle .crm-nav-icon:last-child{width:15px;height:15px;color:#9aa8b8}
+.crm-nav-subnav{display:grid;gap:3px;margin:0 0 7px 17px;padding:3px 0 3px 12px;border-left:1px solid rgba(1,33,105,.12);animation:crmNavReveal .24s cubic-bezier(.16,1,.3,1) both}
+.crm-nav-subnav .crm-nav-link{min-height:39px;padding-left:10px;font-size:10px}
+@keyframes crmNavReveal{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.crm-sidebar-footer{display:grid;gap:9px;margin-top:auto;padding:22px 4px 0}
+.crm-sidebar-user{display:flex;align-items:center;gap:10px;min-width:0;padding:10px 8px;border-top:1px solid rgba(1,33,105,.08)}
+.crm-user-avatar{width:32px;height:32px;flex:none;display:grid;place-items:center;border-radius:11px;background:rgba(1,33,105,.09);color:#183c69;font-size:10px;font-weight:850}
+.crm-user-copy{display:grid;gap:3px;min-width:0}
+.crm-user-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#334a67;font-size:10px;font-weight:800}
+.crm-user-copy small{color:#91a0b1;font-size:9px;text-transform:capitalize}
+.crm-signout{width:100%;min-height:39px;display:flex;align-items:center;gap:11px;padding:0 12px;border:1px solid rgba(1,33,105,.08);border-radius:11px;background:rgba(255,255,255,.48);color:#687a91;font-size:10px;font-weight:750;text-align:left;cursor:pointer;transition:background .22s,color .22s,transform .22s}
+.crm-signout:hover{background:rgba(185,65,65,.08);color:#9a4141}
+.workspace{min-width:0}
+.workspace-tools .user{justify-content:flex-end}
+@media(max-width:1050px){
+ .app{grid-template-columns:76px minmax(0,1fr)}
+ .crm-route-layout{grid-template-columns:76px minmax(0,1fr)}
+ .crm-sidebar{width:76px;padding:18px 8px 12px}
+ .crm-side-brand{justify-content:center;margin:0 0 24px;padding:0}
+ .crm-side-brand-copy,.crm-nav-caption,.crm-nav-link>span,.crm-nav-group-toggle>span,.crm-nav-group-toggle .crm-nav-icon:last-child,.crm-user-copy,.crm-signout>span{display:none}
+ .crm-nav-link,.crm-nav-group-toggle{justify-content:center;gap:0;padding:0}
+ .crm-nav-icon{width:20px;height:20px}
+ .crm-nav-divider{margin:10px 7px 6px}
+ .crm-nav-subnav{margin-left:0;padding-left:0;border-left:0}
+ .crm-nav-subnav .crm-nav-link{min-height:41px}
+ .crm-sidebar-footer{padding-top:18px}
+ .crm-sidebar-user{justify-content:center;padding:10px 0}
+ .crm-signout{justify-content:center;padding:0}
+ .workspace{padding-inline:22px}
+}
+@media(max-width:680px){
+ .app{grid-template-columns:64px minmax(0,1fr)}
+ .crm-route-layout{grid-template-columns:64px minmax(0,1fr)}
+ .crm-sidebar{width:64px;padding:14px 6px 10px}
+ .crm-side-mark{width:38px;height:38px}
+ .crm-nav-link,.crm-nav-group-toggle{min-height:41px}
+ .workspace{padding:18px 13px 32px}
+}
+@media(prefers-reduced-motion:reduce){.crm-nav-subnav{animation:none}}
