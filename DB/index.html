@@ -145,7 +145,7 @@ function showNotice(message,type="info"){const el=$("notice");el.textContent=mes
 function hideNotice(){$("notice").className="notice";}
 function formatDate(value){if(!value)return "—";const d=new Date(value);return Number.isNaN(d.getTime())?"—":d.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"});}
 function searchValue(){return $("search").value.trim().replace(/[^a-zA-Z0-9 @._+\-]/g," ").replace(/\s+/g," ").trim();}
-async function makeQuery(){
+async async function makeQuery(){
  return await RPCPHAuth.api("agent_profiles",{search:searchValue(),status:$("status").value,sort:$("sort").value});
 }
 async function loadRows(){
