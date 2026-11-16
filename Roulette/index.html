@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#edf2f8">
+<title>RPCPH CRM — Roulette Settings</title>
+<link rel="stylesheet" href="/crm-motion.css">
+<style>
+:root{--navy:#012169;--blue:#418FDE;--ink:#142238;--muted:#718096}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)}
+body{min-height:100vh;background:#edf2f8 url('/luxury-building-wallpaper.svg') center/cover fixed no-repeat}
+body:before{content:"";position:fixed;inset:0;background:rgba(245,248,252,.42);pointer-events:none}
+button,select{font:inherit}
+.page{position:relative;z-index:1;max-width:1320px;margin:auto;padding:25px clamp(14px,3vw,42px) 44px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:30px}
+.brand{display:flex;align-items:center;gap:11px;font-size:14px;font-weight:850;letter-spacing:-.3px}
+.brandmark{width:42px;height:42px;border-radius:12px;background:var(--navy);color:white;display:grid;place-items:center;font-size:18px}
+.brand small{display:block;margin-top:3px;color:#74839a;font-size:9px;letter-spacing:1.5px}
+.top-actions{display:flex;gap:8px;flex-wrap:wrap}
+.linkbtn,.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:39px;padding:0 13px;border:1px solid rgba(1,33,105,.14);border-radius:10px;background:rgba(255,255,255,.62);color:var(--navy);font-size:11px;font-weight:750;text-decoration:none;cursor:pointer}
+.btn.primary{background:var(--navy);color:white;border-color:var(--navy)}
+.btn:disabled{opacity:.48;cursor:not-allowed}
+.intro{margin-bottom:20px}
+.eyebrow{font-size:10px;font-weight:850;letter-spacing:1.5px;text-transform:uppercase;color:#70819b}
+h1{font-size:clamp(32px,4vw,48px);letter-spacing:-2px;line-height:1;margin:9px 0;font-weight:620;color:#172b4d}
+.lead{margin:0;max-width:780px;color:#728197;font-size:12px;line-height:1.65}
+.panel{border:1px solid rgba(255,255,255,.84);border-radius:16px;background:rgba(255,255,255,.58);box-shadow:0 12px 35px rgba(16,36,68,.065),inset 0 1px 0 rgba(255,255,255,.88);backdrop-filter:blur(20px) saturate(155%);-webkit-backdrop-filter:blur(20px) saturate(155%)}
+.settings-panel{padding:22px}
+.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+.panel-head h2{margin:0 0 6px;font-size:17px;letter-spacing:-.35px;color:#1b2e4d}
+.panel-head p{margin:0;max-width:730px;color:#748197;font-size:11px;line-height:1.6}
+.active-chip{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;padding:7px 10px;border-radius:99px;background:#e5f3ea;color:#28724d;font-size:9px;font-weight:850}
+.active-chip:before{content:"";width:7px;height:7px;border-radius:50%;background:#2e9462}
+.controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end}
+.field label{display:block;margin:0 0 7px 2px;color:#718096;font-size:9px;font-weight:850;letter-spacing:1px;text-transform:uppercase}
+.field select{width:100%;height:44px;padding:0 13px;border:1px solid rgba(1,33,105,.15);border-radius:10px;background:rgba(255,255,255,.88);color:#26384e;font-size:12px;outline:none}
+.field select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(65,143,222,.12)}
+.mode-explain{margin-top:14px;padding:14px 16px;border:1px solid rgba(65,143,222,.12);border-radius:12px;background:rgba(65,143,222,.075);color:#34506e;font-size:11px;line-height:1.65}
+.mode-explain strong{display:block;margin-bottom:4px;color:#1e416e;font-size:12px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-top:18px}
+.stat{padding:15px 17px;border:1px solid rgba(255,255,255,.88);border-radius:12px;background:rgba(255,255,255,.68)}
+.stat strong{display:block;color:#203c64;font-size:25px;letter-spacing:-.8px}
+.stat span{display:block;margin-top:4px;color:#718096;font-size:10px}
+.history{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.mode-chip{padding:7px 10px;border-radius:99px;background:#f0f3f8;color:#607086;font-size:9px;font-weight:750}
+.notice{margin-top:14px;color:#526f95;font-size:10px;line-height:1.5}
+@media(max-width:650px){.page{padding:16px 11px 28px}.topbar{align-items:flex-start;flex-direction:column}.settings-panel{padding:15px}.panel-head{display:block}.active-chip{margin-top:10px}.controls{grid-template-columns:1fr}.controls .btn{width:100%}.stats{grid-template-columns:1fr}.linkbtn{font-size:10px}}
+</style>
+<script>document.documentElement.classList.add("auth-pending")</script>
+<script src="/local-auth.js"></script>
+</head>
+<body>
+<div class="page">
+<header class="topbar">
+ <div class="brand"><div class="brandmark">R.</div><div>RPCPH CRM<small>ROULETTE SETTINGS</small></div></div>
+ <nav class="top-actions"><a class="linkbtn" href="/">← Search workspace</a><a class="linkbtn" href="/Leads/">Lead Listings</a></nav>
+</header>
+<main>
+ <section class="intro"><div class="eyebrow">Operations / Opportunity distribution</div><h1>Roulette Settings</h1><p class="lead">Choose how the CRM highlights an eligible agent for each lead search. Roulette only highlights and prioritizes the selected agent in the results; it never accepts or assigns a lead automatically.</p></section>
+ <section class="panel settings-panel">
+  <div class="panel-head"><div><h2>Agent selection mode</h2><p>Change the selection method independently of employee imports and directory management. Previous opportunities and response history are retained when you switch modes.</p></div><span class="active-chip">Settings available</span></div>
+  <div class="controls">
+   <div class="field"><label for="rouletteMode">Active roulette mode</label><select id="rouletteMode"><option value="fair">Fair Roulette</option><option value="russian">Russian Roulette</option><option value="random">Random Roulette</option><option value="apex">Apex Roulette</option><option value="ascendancy">Ascendancy Roulette</option></select></div>
+   <button id="saveRouletteMode" class="btn primary" type="button">Save active mode</button>
+  </div>
+  <div class="mode-explain" id="rouletteModeExplain" aria-live="polite">Loading mode details…</div>
+  <div class="stats">
+   <div class="stat"><strong id="rouletteOffered">—</strong><span>Opportunities highlighted</span></div>
+   <div class="stat"><strong id="rouletteAccepted">—</strong><span>Agent acceptances</span></div>
+   <div class="stat"><strong id="rouletteRate">—</strong><span>Acceptance rate</span></div>
+  </div>
+  <div class="history" id="rouletteModeHistory"></div>
+  <div class="notice" id="rouletteNotice" role="status">Loading settings…</div>
+ </section>
+</main>
+</div>
+<script>
+(function(){
+ const endpoint="https://pfuomojvcuwbvqtzvglb.supabase.co/functions/v1/rpcph-local-auth";
+ const key="sb_publishable__W9mPIcJIZ7QDhzbKWNm_g_IsEMgMUt";
+ const names={fair:"Fair Roulette",russian:"Russian Roulette",random:"Random Roulette",apex:"Apex Roulette",ascendancy:"Ascendancy Roulette"};
+ const copy={
+  fair:"Prioritizes eligible agents with the fewest previous highlighted opportunities. Ties are random.",
+  russian:"Randomly selects an eligible agent but avoids the immediately previous pick when alternatives exist.",
+  random:"Equal random odds for every eligible agent on every search; history does not affect the draw.",
+  apex:"Prioritizes agents with the most accepted lead opportunities recorded in this CRM. It does not invent a subjective employee score.",
+  ascendancy:"Prioritizes eligible agents with the fewest previous highlighted opportunities, helping opportunity volume catch up. Ties are random."
+ };
+ const $=id=>document.getElementById(id);
+ async function call(action,payload={}){
+  const token=localStorage.getItem("rpcph_local_session_v1");
+  const res=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json",apikey:key},body:JSON.stringify({action,...payload,...(token?{token}:{})})});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok)throw Error(data.error||data.message||"Request failed");
+  return data;
+ }
+ function describe(){
+  const mode=$("rouletteMode").value;
+  $("rouletteModeExplain").innerHTML="<strong>"+names[mode]+"</strong>"+copy[mode];
+ }
+ async function load(){
+  try{
+   const data=await call("roulette_admin");
+   $("rouletteMode").value=data.settings?.active_mode||"random";
+   describe();
+   const offered=data.summary?.offered||0,accepted=data.summary?.accepted||0;
+   $("rouletteOffered").textContent=offered.toLocaleString();
+   $("rouletteAccepted").textContent=accepted.toLocaleString();
+   $("rouletteRate").textContent=offered?Math.round(accepted/offered*100)+"%":"—";
+   $("rouletteModeHistory").innerHTML=Object.entries(data.summary?.byMode||{}).map(([mode,value])=>'<span class="mode-chip">'+names[mode]+': '+value.offered+' offered · '+value.accepted+' accepted</span>').join("")||'<span class="mode-chip">No history yet</span>';
+   $("rouletteNotice").textContent="Mode history is retained when the active selection method changes.";
+  }catch(error){$("rouletteNotice").textContent=error.message||"Could not load roulette settings."}
+ }
+ $("rouletteMode").addEventListener("change",describe);
+ $("saveRouletteMode").addEventListener("click",async()=>{
+  const button=$("saveRouletteMode");button.disabled=true;
+  try{await call("set_roulette_mode",{mode:$("rouletteMode").value});await load();$("rouletteNotice").textContent="Saved "+names[$("rouletteMode").value]+". Previous history was preserved."}
+  catch(error){$("rouletteNotice").textContent=error.message||"Could not save roulette mode."}
+  finally{button.disabled=false}
+ });
+ window.loadRouletteAdmin=load;
+})();
+</script>
+<script>RPCPHAuth.requireAuth(["admin","superadmin"]).then(()=>window.loadRouletteAdmin?.()).catch(()=>location.replace("/Login/"));</script>
+<script src="/crm-motion.js" defer></script>
+</body>
+</html>
