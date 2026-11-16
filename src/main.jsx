@@ -12,6 +12,7 @@ import areasPage from "../Areas/index.html?raw";
 import databasePage from "../DB/index.html?raw";
 import agentsPage from "../Agents/index.html?raw";
 import leadsPage from "../Leads/index.html?raw";
+import roulettePage from "../Roulette/index.html?raw";
 
 const API="https://pfuomojvcuwbvqtzvglb.supabase.co/functions/v1/rpcph-local-auth";
 const KEY="sb_publishable__W9mPIcJIZ7QDhzbKWNm_g_IsEMgMUt";
@@ -70,6 +71,7 @@ function routeForPath(path){
  if(p==="/DB"||p==="/DB/index.html")return "database";
  if(p==="/Agents"||p==="/Agents/index.html")return "agents";
  if(p==="/Leads"||p==="/Leads/index.html")return "leads";
+ if(p==="/Roulette"||p==="/Roulette/index.html")return "roulette";
  return "home";
 }
 
@@ -184,6 +186,7 @@ const NAV_ICON_PATHS={
  users:<><path d="M16 21v-1.8a4.2 4.2 0 0 0-4.2-4.2H7.2A4.2 4.2 0 0 0 3 19.2V21"/><circle cx="9.5" cy="7.5" r="3.5"/><path d="M17 11.2a3.5 3.5 0 0 0 0-6.8M17 15h.8a3.2 3.2 0 0 1 3.2 3.2V21"/></>,
  database:<><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7"/></>,
  folder:<><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H10l2 2h6.5A2.5 2.5 0 0 1 21 9.5v8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/><path d="M3 10h18"/></>,
+ roulette:<><path d="M4 7h4l8 10h4"/><path d="M4 17h4L16 7h4"/><path d="M3 5v4M3 15v4M21 5v4M21 15v4"/></>,
  settings:<><circle cx="12" cy="12" r="3.5"/><path d="M19.4 13.5a7.8 7.8 0 0 0 0-3l1.3-1-1.5-2.6-1.5.6a7.8 7.8 0 0 0-2.6-1.5L14.9 4h-3l-.3 2a7.8 7.8 0 0 0-2.6 1.5l-1.5-.6L6 9.5l1.3 1a7.8 7.8 0 0 0 0 3L6 14.5l1.5 2.6 1.5-.6a7.8 7.8 0 0 0 2.6 1.5l.3 2h3l.3-2a7.8 7.8 0 0 0 2.6-1.5l1.5.6 1.5-2.6z"/></>,
  logout:<><path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></>,
  chevron:<path d="m7 10 5 5 5-5"/>
@@ -203,6 +206,7 @@ function Sidebar({user,active,onLogout}){
     <div className="crm-nav-divider"/>
     <div className="crm-nav-caption">OPERATIONS</div>
     {item("leads","Lead Listings","/Leads/","leads")}
+    {item("roulette","Roulette Settings","/Roulette/","roulette")}
     <div className="crm-nav-divider"/>
     <div className="crm-nav-caption">MANAGE</div>
     <button className={"crm-nav-group-toggle "+(["agents","areas"].includes(active)?"has-active":"")} type="button" onClick={()=>toggle("directory")} aria-expanded={expanded.directory} aria-controls="crm-directory-subnav" title="Directory">
@@ -343,7 +347,7 @@ function App(){
  async function logout(){try{await api("logout")}catch{}localStorage.removeItem(SESSION_KEY);setUser(null);if(route!=="home")location.replace("/");}
  if(checking)return <div className="loading"><motion.div className="loader" animate={{scale:[.92,1.05,.92],opacity:[.55,1,.55]}} transition={{duration:1.1,repeat:Infinity,ease:"easeInOut"}}/></div>;
  if(route!=="home"){
-  const pages={admin:adminPage,users:usersPage,areas:areasPage,database:databasePage,agents:agentsPage,leads:leadsPage};
+  const pages={admin:adminPage,users:usersPage,areas:areasPage,database:databasePage,agents:agentsPage,leads:leadsPage,roulette:roulettePage};
   return <div className="crm-route-layout"><Sidebar user={user} active={route} onLogout={logout}/><div className="crm-route-content"><LegacyPage html={pages[route]}/></div></div>;
  }
  return <AnimatePresence mode="wait">{user?<motion.div key="app" className="screen" initial={{opacity:0,scale:1.012}} animate={{opacity:1,scale:1}} transition={{duration:.55,ease}}><Dashboard user={user} onLogout={logout}/></motion.div>:<motion.div key="login" className="screen" initial={{opacity:0,scale:.995}} animate={{opacity:1,scale:1}} exit={{opacity:0,scale:1.012}} transition={{duration:.48,ease}}><Login onLogin={setUser}/></motion.div>}</AnimatePresence>
