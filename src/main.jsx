@@ -27,6 +27,37 @@ async function api(action,payload={}){
 const ease=[.16,1,.3,1];
 const spring={type:"spring",stiffness:420,damping:32,mass:.72};
 const pageVariants={initial:{opacity:0,y:14,scale:.992},animate:{opacity:1,y:0,scale:1,transition:{duration:.42,ease}},exit:{opacity:0,y:-8,scale:.998,transition:{duration:.22,ease:[.4,0,1,1]}}};
+const NC_COUNTIES = new Set([
+ "Alamance","Alexander","Alleghany","Anson","Ashe","Avery","Beaufort","Bertie","Bladen","Brunswick",
+ "Buncombe","Burke","Cabarrus","Caldwell","Camden","Carteret","Caswell","Catawba","Chatham","Cherokee",
+ "Chowan","Clay","Cleveland","Columbus","Craven","Cumberland","Currituck","Dare","Davidson","Davie",
+ "Duplin","Durham","Edgecombe","Forsyth","Franklin","Gaston","Gates","Graham","Granville","Greene",
+ "Guilford","Halifax","Harnett","Haywood","Henderson","Hertford","Hoke","Hyde","Iredell","Jackson",
+ "Johnston","Jones","Lee","Lenoir","Lincoln","Macon","Madison","Martin","McDowell","Mecklenburg",
+ "Mitchell","Montgomery","Moore","Nash","New Hanover","Northampton","Onslow","Orange","Pamlico",
+ "Pasquotank","Pender","Perquimans","Person","Pitt","Polk","Randolph","Richmond","Robeson","Rockingham",
+ "Rowan","Rutherford","Sampson","Scotland","Stanly","Stokes","Surry","Swain","Transylvania","Tyrrell",
+ "Union","Vance","Wake","Warren","Washington","Watauga","Wayne","Wilkes","Wilson","Yadkin","Yancey"
+]);
+function normalizeNcCounty(value){
+ const raw=String(value||"").trim().replace(/\\s+/g," ");
+ const base=raw.replace(/\\s+County$/i,"").trim();
+ const match=[...NC_COUNTIES].find(name=>name.toLowerCase()===base.toLowerCase());
+ return match||null;
+}
+function countyFromPlace(place){
+ const address=place?.address||{};
+ if(String(address.state||"").toLowerCase()!=="north carolina") return {county:null,state:address.state||""};
+ const candidates=[address.county,address.municipality,address.city_district,address.city,address.town,address.village];
+ for(const candidate of candidates){
+  const county=normalizeNcCounty(candidate);
+  if(county) return {county,state:"North Carolina"};
+ }
+ const display=String(place?.display_name||"");
+ const countyMatch=display.match(/([^,]+?) County, North Carolina/i);
+ return {county:countyMatch?normalizeNcCounty(countyMatch[1]):null,state:"North Carolina"};
+}
+
 
 function routeForPath(path){
  const p=path.replace(/\/+$/,"")||"/";
@@ -202,7 +233,7 @@ function Dashboard({user,onLogout}){
  const [locationSuggestions,setLocationSuggestions]=useState([]);const [suggestionsOpen,setSuggestionsOpen]=useState(false);const [suggestionsLoading,setSuggestionsLoading]=useState(false);const [selectedLocation,setSelectedLocation]=useState(null);
  const [metrics,setMetrics]=useState([{n:"—",l:"Active leads",detail:"Loading live data…"},{n:"—",l:"Agents available",detail:"Loading live data…"},{n:"—",l:"Top lead source",detail:"Loading lead-source mix…"}]);
  useEffect(()=>{const query=lead.location.trim();if(query.length<3){setLocationSuggestions([]);setSuggestionsOpen(false);setSuggestionsLoading(false);return;}const controller=new AbortController();const timer=setTimeout(async()=>{setSuggestionsLoading(true);try{const url="https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=us&q="+encodeURIComponent(query);const response=await fetch(url,{headers:{Accept:"application/json"},signal:controller.signal});if(!response.ok)throw new Error("Location suggestions unavailable");const data=await response.json();setLocationSuggestions(Array.isArray(data)?data:[]);setSuggestionsOpen(true);}catch(error){if(error.name!=="AbortError")setLocationSuggestions([]);}finally{if(!controller.signal.aborted)setSuggestionsLoading(false);}},450);return()=>{clearTimeout(timer);controller.abort();};},[lead.location]);
- function chooseLocation(place){setLead(current=>({...current,location:place.display_name}));setSelectedLocation({latitude:Number(place.lat),longitude:Number(place.lon),label:place.display_name});setLocationSuggestions([]);setSuggestionsOpen(false);}
+ function chooseLocation(place){const geo=countyFromPlace(place);setLead(current=>({...current,location:place.display_name}));setSelectedLocation({latitude:Number(place.lat),longitude:Number(place.lon),label:place.display_name,county:geo.county,state:geo.state});setLocationSuggestions([]);setSuggestionsOpen(false);}
  async function refreshMetrics(){
   try{
    const data=await api("dashboard_metrics");
@@ -222,12 +253,21 @@ function Dashboard({user,onLogout}){
  useEffect(()=>{refreshMetrics();},[]);
  const reduce=useReducedMotion();
  const isAdmin=["admin","superadmin"].includes(user?.role);
- async function submit(e){e.preventDefault();if(!lead.name.trim()){setStatus("Enter the lead name.");return;}if(!lead.location.trim()){setStatus("Enter a ZIP code, town, county, state, or location.");return;}if(!lead.type||!lead.source){setStatus("Select a lead type and lead source.");return;}setLoading(true);setStatus("Resolving county and checking assigned agent territories…");
+ async function submit(e){e.preventDefault();if(!lead.name.trim()){setStatus("Enter the lead name.");return;}if(!lead.location.trim()){setStatus("Enter a ZIP code, town, county, state, or location.");return;}if(!lead.type||!lead.source){setStatus("Select a lead type and lead source.");return;}setLoading(true);setStatus("Resolving North Carolina county and checking assigned agent territories…");
   try{
    setCurrentLead(null);
    let origin=selectedLocation&&selectedLocation.label===lead.location.trim()?selectedLocation:null;
-   if(!origin){const geo=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&countrycodes=us&q="+encodeURIComponent(lead.location.trim()),{headers:{"Accept":"application/json"}});const places=await geo.json();if(!places?.length)throw new Error("Location not found. Choose a suggested location or try a ZIP code, town, county, or city and state.");origin={latitude:Number(places[0].lat),longitude:Number(places[0].lon),label:places[0].display_name};}
-   const d=await api("create_lead",{lead_name:lead.name.trim(),town_or_county:lead.location.trim(),county_used:lead.location.trim(),target_county:lead.location.trim(),target_location:lead.location.trim(),target_latitude:origin.latitude,target_longitude:origin.longitude,radius_miles:20,lead_type:lead.type.toLowerCase(),lead_source:lead.source});
+   if(!origin){
+    const geo=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&countrycodes=us&q="+encodeURIComponent(lead.location.trim()),{headers:{"Accept":"application/json"}});
+    const places=await geo.json();
+    if(!places?.length)throw new Error("Location not found. Choose a suggested North Carolina location or enter a ZIP code, city, town, or county.");
+    const resolved=countyFromPlace(places[0]);
+    origin={latitude:Number(places[0].lat),longitude:Number(places[0].lon),label:places[0].display_name,county:resolved.county,state:resolved.state};
+   }
+   const resolvedCounty=normalizeNcCounty(origin.county);
+   if(origin.state!=="North Carolina")throw new Error("RPCPH CRM currently matches leads only within North Carolina.");
+   if(!resolvedCounty)throw new Error("I found the location, but could not identify its North Carolina county. Choose a city, town, ZIP code, or county from the suggestions.");
+   const d=await api("create_lead",{lead_name:lead.name.trim(),town_or_county:lead.location.trim(),county_used:resolvedCounty,target_county:resolvedCounty,target_location:lead.location.trim(),target_latitude:origin.latitude,target_longitude:origin.longitude,radius_miles:20,lead_type:lead.type.toLowerCase(),lead_source:lead.source});
    const milesBetween=(lat1,lon1,lat2,lon2)=>{const rad=x=>x*Math.PI/180;const dLat=rad(lat2-lat1),dLon=rad(lon2-lon1);const h=Math.sin(dLat/2)**2+Math.cos(rad(lat1))*Math.cos(rad(lat2))*Math.sin(dLon/2)**2;return 3958.7613*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));};
    const within20=(d.agents||[]).map(a=>{const direct=Number(a.distance_miles??a.distance??NaN);const lat=Number(a.latitude??a.lat??a.agent_latitude??NaN);const lon=Number(a.longitude??a.lng??a.lon??a.agent_longitude??NaN);const distance=Number.isFinite(direct)?direct:(Number.isFinite(lat)&&Number.isFinite(lon)?milesBetween(origin.latitude,origin.longitude,lat,lon):NaN);return {...a,distance_miles:distance};}).filter(a=>Number.isFinite(a.distance_miles)&&a.distance_miles<=20).sort((a,b)=>a.distance_miles-b.distance_miles);
    const matches=Array.isArray(d.agents)?d.agents:[];
