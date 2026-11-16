@@ -38,7 +38,9 @@
 /* Shared company lockup: clean, balanced wordmarks for the CRM shell. */
 .login-company-lockup,.workspace-company-lockup{display:flex;align-items:center;gap:12px;min-width:0}
 .login-company-lockup{justify-content:flex-start;margin-bottom:10px}
-.workspace-company-lockup{gap:10px}
+.workspace-company-lockup{width:min(100%,360px);gap:0}
+.brand-lockup-image{display:block;width:100%;height:auto;max-width:100%;object-fit:contain}
+.login-company-lockup{width:100%;max-width:360px}
 .company-logo{display:flex;align-items:center;min-width:0;gap:8px;color:#193657}
 .remote-company{gap:9px}
 .rp-symbol{width:39px;height:39px;display:grid;place-items:center;flex:0 0 39px;border-radius:11px;background:#0c3767;color:#fff;font-size:14px;font-weight:900;letter-spacing:-1px}
