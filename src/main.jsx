@@ -160,9 +160,7 @@ function Login({onLogin}){
   <div className="auth-backdrop"/>
   <motion.form className="auth-panel" onSubmit={submit} initial={reduce?false:{opacity:0,y:20,scale:.985}} animate={{opacity:1,y:0,scale:1}} transition={{...spring,delay:.08}}>
    <div className="login-company-lockup" aria-label="Remote Professionals and Coldwell Banker">
-    <div className="company-logo remote-company"><span className="rp-symbol">RP</span><span className="rp-wordmark"><strong>REMOTE</strong><small>PROFESSIONALS</small></span></div>
-    <span className="company-separator" aria-hidden="true"></span>
-    <div className="company-logo coldwell-company"><span className="cb-symbol">CB</span><span className="cb-wordmark">Coldwell<br/>Banker</span></div>
+    <img className="brand-lockup-image" src="/rp-coldwell-logo-lockup.png" alt="Remote Professionals and Coldwell Banker"/>
    </div>
    <div className="login-product-name">RPCPH CRM</div>
    <div className="eyebrow">CRM ACCESS</div><h1>Sign in</h1>
@@ -316,9 +314,7 @@ function Dashboard({user,onLogout}){
   <main className="workspace">
    <header className="topbar">
     <div className="workspace-heading"><div className="workspace-company-lockup" aria-label="Remote Professionals and Coldwell Banker">
-      <div className="company-logo remote-company"><span className="rp-symbol">RP</span><span className="rp-wordmark"><strong>REMOTE</strong><small>PROFESSIONALS</small></span></div>
-      <span className="company-separator" aria-hidden="true"></span>
-      <div className="company-logo coldwell-company"><span className="cb-symbol">CB</span><span className="cb-wordmark">Coldwell<br/>Banker</span></div>
+      <img className="brand-lockup-image" src="/rp-coldwell-logo-lockup.png" alt="Remote Professionals and Coldwell Banker"/>
      </div><h2>Workspace</h2></div>
     <div className="workspace-tools"><div className="user"><span>{user?.display_name||"CRM User"} · {user?.role||"employee"}</span></div></div>\n   </header>
    <section className="hero"><div><h1>Find the right agent</h1></div><div className="hero-mark">R</div></section>
