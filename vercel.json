@@ -3,6 +3,14 @@
   "trailingSlash": false,
   "rewrites": [
     {
+      "source": "/Roulette",
+      "destination": "/"
+    },
+    {
+      "source": "/Roulette/",
+      "destination": "/"
+    },
+    {
       "source": "/Leads",
       "destination": "/"
     },
