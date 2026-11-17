@@ -1,2 +1,34 @@
-/* Shared lightweight motion behavior for legacy CRM routes; React remains the only frontend framework. */
-(()=>{const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;const root=document.querySelector('.page,main,.wrap')||document.body;if(!reduce){root.classList.add('crm-enter');const items=document.querySelectorAll('.panel,.stat,.metric,.section,.lead-card,.results');items.forEach((el,i)=>{el.classList.add('crm-stagger');el.style.setProperty('--crm-delay',Math.min(i*45,360)+'ms')});document.addEventListener('click',e=>{const a=e.target.closest('a[href]');if(!a||a.target==='_blank'||e.defaultPrevented||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;const href=a.getAttribute('href');if(!href||href.startsWith('#')||href.startsWith('javascript:'))return;const u=new URL(href,location.href);if(u.origin!==location.origin)return;e.preventDefault();root.animate([{opacity:1,transform:'translateY(0)'},{opacity:0,transform:'translateY(-5px)'}],{duration:150,easing:'cubic-bezier(.4,0,1,1)'}).finished.then(()=>location.assign(u.href))})}document.documentElement.classList.remove('auth-pending')})();
+/* Shared, idempotent motion behavior for the CRM shell and lazy-loaded workflow pages. */
+(()=>{
+ const reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+ function refresh(scope=document){
+  const root=scope.querySelector?.(".page,main,.wrap")||scope;
+  if(!reduced){
+   root.classList?.add("crm-enter");
+   const items=root.querySelectorAll?.(".panel,.stat,.metric,.section,.lead-card,.results")||[];
+   items.forEach((element,index)=>{
+    element.classList.add("crm-stagger");
+    element.style.setProperty("--crm-delay",Math.min(index*45,360)+"ms");
+   });
+  }
+  document.documentElement.classList.remove("auth-pending");
+ }
+ if(!window.RPCPH_MOTION_LISTENER_READY){
+  window.RPCPH_MOTION_LISTENER_READY=true;
+  document.addEventListener("click",event=>{
+   const anchor=event.target?.closest?.("a[href]");
+   if(!anchor||anchor.target==="_blank"||event.defaultPrevented||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||event.button!==0)return;
+   const href=anchor.getAttribute("href");
+   if(!href||href.startsWith("#")||href.startsWith("javascript:")||anchor.hasAttribute("download"))return;
+   let target;
+   try{target=new URL(href,window.location.href);}catch{return;}
+   if(target.origin!==window.location.origin)return;
+   event.preventDefault();
+   const destination=target.pathname+target.search+target.hash;
+   if(typeof window.RPCPHNavigate==="function")window.RPCPHNavigate(destination);
+   else window.location.assign(target.href);
+  });
+ }
+ window.RPCPHMotionRefresh=refresh;
+ refresh(document);
+})();

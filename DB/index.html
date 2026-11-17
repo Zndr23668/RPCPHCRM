@@ -130,7 +130,7 @@ const SUPABASE_URL="https://pfuomojvcuwbvqtzvglb.supabase.co";
 const SUPABASE_KEY="sb_publishable__W9mPIcJIZ7QDhzbKWNm_g_IsEMgMUt";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const PAGE_SIZE=25;
-let page=0,total=0,currentRows=[];
+let page=0,total=0,currentRows=[],searchTimer=null;
 const $=id=>document.getElementById(id);
 function esc(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));}
 function showNotice(message,type="info"){const el=$("notice");el.textContent=message;el.className="notice show "+type;}
@@ -153,19 +153,29 @@ function makeQuery(){
  else q=q.order("created_at",{ascending:sort==="oldest",nullsFirst:false});
  return q.range(page*PAGE_SIZE,(page+1)*PAGE_SIZE-1);
 }
-async function loadRows(){
+async function loadRows(force=false){
  const btn=$("searchBtn"),refresh=$("refreshBtn");
+ const cacheKey="db:agents:"+JSON.stringify([searchValue(),$("status").value,$("sort").value,page]);
+ const cached=!force?window.RPCPHDataCache?.get(cacheKey):undefined;
  btn.disabled=true;refresh.disabled=true;
- $("rows").innerHTML='<tr><td colspan="9" class="empty">Loading records…</td></tr>';
+ if(cached){
+  currentRows=cached.rows||[];total=Number(cached.total)||0;
+  renderRows();
+ }else if(!currentRows.length){
+  $("rows").innerHTML='<tr><td colspan="9" class="empty">Loading records…</td></tr>';
+ }else{
+  $("resultLabel").textContent="Updating results…";
+ }
  hideNotice();
  try{
   const {data,error,count}=await makeQuery();
   if(error)throw error;
   currentRows=data||[];total=count||0;
+  window.RPCPHDataCache?.set(cacheKey,{rows:currentRows,total},20000);
   renderRows();
  }catch(error){
-  currentRows=[];total=0;renderRows();
-  showNotice("Could not load the database: "+(error.message||"Supabase request failed")+". Check the Supabase connection and read policy.","warn");
+  if(!cached)renderRows();
+  showNotice(cached||currentRows.length?"The live search could not refresh. Previously loaded results are still shown.":"Could not load the database: "+(error.message||"Supabase request failed")+". Check the Supabase connection and read policy.","warn");
  }finally{btn.disabled=false;refresh.disabled=false;}
 }
 function renderRows(){
@@ -231,9 +241,10 @@ function exportPage(){
  const blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
  const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="RPCPH-database-page-"+(page+1)+".csv";a.click();URL.revokeObjectURL(url);
 }
-function runSearch(){page=0;loadRows();}
+function runSearch(){clearTimeout(searchTimer);searchTimer=null;page=0;loadRows();}
 $("searchBtn").addEventListener("click",runSearch);
-$("refreshBtn").addEventListener("click",loadRows);
+$("refreshBtn").addEventListener("click",()=>loadRows(true));
+$("search").addEventListener("input",()=>{clearTimeout(searchTimer);searchTimer=setTimeout(runSearch,320);});
 $("search").addEventListener("keydown",event=>{if(event.key==="Enter")runSearch();});
 $("status").addEventListener("change",runSearch);
 $("sort").addEventListener("change",runSearch);
@@ -242,7 +253,7 @@ $("nextBtn").addEventListener("click",()=>{if((page+1)*PAGE_SIZE<total){page++;l
 $("exportBtn").addEventListener("click",exportPage);
 $("closeModal").addEventListener("click",closeDetails);
 $("modal").addEventListener("click",event=>{if(event.target===$("modal"))closeDetails();});
-document.addEventListener("keydown",event=>{if(event.key==="Escape")closeDetails();});
+const onDocumentKeydown=event=>{if(event.key==="Escape")closeDetails();};document.addEventListener("keydown",onDocumentKeydown);window.RPCPHRegisterRouteCleanup?.(()=>document.removeEventListener("keydown",onDocumentKeydown));
 loadRows();
 </script>
 <script>RPCPHAuth.requireAuth(["admin","superadmin"]).catch(()=>location.replace("/Login/"));</script>
