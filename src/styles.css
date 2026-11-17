@@ -161,3 +161,18 @@ body{
  .workspace{padding:18px 13px 32px}
 }
 @media(prefers-reduced-motion:reduce){.crm-nav-subnav{animation:none}}
+
+/* Seamless route transitions and compact, non-blocking loading feedback. */
+.route-loading{
+ min-height:100vh;display:flex;align-items:flex-start;gap:13px;padding:clamp(24px,4vw,48px);
+ background:#f4f7fb;color:#1c3554;
+}
+.route-loading-indicator{
+ width:22px;height:22px;flex:0 0 22px;border:2px solid rgba(18,61,120,.14);
+ border-top-color:#418fde;border-radius:50%;animation:rpcphRouteSpin .72s linear infinite;
+}
+.route-loading-copy{display:grid;gap:4px;padding-top:1px}
+.route-loading-copy strong{font-size:12px;font-weight:800;letter-spacing:-.1px}
+.route-loading-copy span{font-size:11px;color:#8190a3;line-height:1.45}
+@keyframes rpcphRouteSpin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.route-loading-indicator{animation:none;border-color:#418fde;border-right-color:rgba(18,61,120,.14)}}
