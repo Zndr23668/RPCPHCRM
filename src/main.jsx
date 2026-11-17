@@ -261,7 +261,7 @@ function Dashboard({user,onLogout}){
  }
  useEffect(()=>{refreshMetrics();},[]);
  const reduce=useReducedMotion();
- const isAdmin=["admin","superadmin"].includes(user?.role);
+ const roleLabel=({user:"User",employee:"User",admin:"Admin",superadmin:"Super Admin"})[user?.role]||"User";
  async function submit(e){e.preventDefault();if(!lead.name.trim()){setStatus("Enter the lead name.");return;}if(!lead.location.trim()){setStatus("Enter a ZIP code, town, county, state, or location.");return;}if(!lead.type||!lead.source){setStatus("Select a lead type and lead source.");return;}setLoading(true);setStatus("Resolving North Carolina county and checking assigned agent territories…");
   try{
    setCurrentLead(null);
