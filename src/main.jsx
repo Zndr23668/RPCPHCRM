@@ -195,25 +195,28 @@ function Sidebar({user,active,onLogout}){
  const [expanded,setExpanded]=useState({directory:["agents","areas"].includes(active),administration:["admin","users","database"].includes(active)});
  const toggle=key=>setExpanded(current=>({...current,[key]:!current[key]}));
  const item=(id,label,href,icon)=><a className={"crm-nav-link "+(active===id?"active":"")} href={href} title={label} aria-current={active===id?"page":undefined} key={id}><NavIcon name={icon}/><span>{label}</span></a>;
+ const roleLabel=({user:"User",employee:"User",admin:"Admin",superadmin:"Super Admin"})[user?.role]||"User";
  return <aside className="crm-sidebar" aria-label="CRM sidebar">
   <a className="crm-side-brand" href="/" aria-label="RPCPH CRM home"><span className="crm-side-mark">R.</span><span className="crm-side-brand-copy"><strong>RPCPH CRM</strong><small>WORKSPACE</small></span></a>
   <nav className="crm-side-nav" aria-label="Main navigation">
    <div className="crm-nav-caption">WORKSPACE</div>
    {item("home","Search","/","search")}
+   <div className="crm-nav-divider"/>
+   <div className="crm-nav-caption">OPERATIONS</div>
+   {item("leads","Lead Listings","/Leads/","leads")}
+   {isAdmin&&item("roulette","Roulette Settings","/Roulette/","roulette")}
+   <div className="crm-nav-divider"/>
+   <div className="crm-nav-caption">DIRECTORY</div>
+   <button className={"crm-nav-group-toggle "+(["agents","areas"].includes(active)?"has-active":"")} type="button" onClick={()=>toggle("directory")} aria-expanded={expanded.directory} aria-controls="crm-directory-subnav" title="Directory">
+    <NavIcon name="agents"/><span>Directory</span><NavIcon name="chevron"/>
+   </button>
+   {expanded.directory&&<div className="crm-nav-subnav" id="crm-directory-subnav">
+    {item("agents","Agent Profiles","/Agents/","agents")}
+    {isAdmin&&item("areas","Area Manager","/Areas/","areas")}
+   </div>}
    {isAdmin&&<>
     <div className="crm-nav-divider"/>
-    <div className="crm-nav-caption">OPERATIONS</div>
-    {item("leads","Lead Listings","/Leads/","leads")}
-    {item("roulette","Roulette Settings","/Roulette/","roulette")}
-    <div className="crm-nav-divider"/>
-    <div className="crm-nav-caption">MANAGE</div>
-    <button className={"crm-nav-group-toggle "+(["agents","areas"].includes(active)?"has-active":"")} type="button" onClick={()=>toggle("directory")} aria-expanded={expanded.directory} aria-controls="crm-directory-subnav" title="Directory">
-     <NavIcon name="agents"/><span>Directory</span><NavIcon name="chevron"/>
-    </button>
-    {expanded.directory&&<div className="crm-nav-subnav" id="crm-directory-subnav">
-     {item("agents","Agent Profiles","/Agents/","agents")}
-     {item("areas","Area Manager","/Areas/","areas")}
-    </div>}
+    <div className="crm-nav-caption">ADMINISTRATION</div>
     <button className={"crm-nav-group-toggle "+(["admin","users","database"].includes(active)?"has-active":"")} type="button" onClick={()=>toggle("administration")} aria-expanded={expanded.administration} aria-controls="crm-admin-subnav" title="Administration">
      <NavIcon name="settings"/><span>Administration</span><NavIcon name="chevron"/>
     </button>
@@ -225,7 +228,7 @@ function Sidebar({user,active,onLogout}){
    </>}
   </nav>
   <div className="crm-sidebar-footer">
-   <div className="crm-sidebar-user"><span className="crm-user-avatar">{String(user?.display_name||"U").trim().split(" ").filter(Boolean).map(x=>x[0]).slice(0,2).join("").toUpperCase()}</span><span className="crm-user-copy"><strong>{user?.display_name||"CRM User"}</strong><small>{user?.role||"Employee"}</small></span></div>
+   <div className="crm-sidebar-user"><span className="crm-user-avatar">{String(user?.display_name||"U").trim().split(" ").filter(Boolean).map(x=>x[0]).slice(0,2).join("").toUpperCase()}</span><span className="crm-user-copy"><strong>{user?.display_name||"CRM User"}</strong><small>{roleLabel}</small></span></div>
    <button className="crm-signout" type="button" onClick={onLogout} title="Sign out"><NavIcon name="logout"/><span>Sign out</span></button>
   </div>
  </aside>;
@@ -337,11 +340,17 @@ function Dashboard({user,onLogout}){
 function App(){
  const [user,setUser]=useState(null);const [checking,setChecking]=useState(true);
  const route=routeForPath(window.location.pathname);
+ const isAdmin=["admin","superadmin"].includes(user?.role);
+ const userAllowedRoutes=["leads","agents"];
  useEffect(()=>{
   api("me").then(d=>setUser(d.user||d)).catch(()=>{localStorage.removeItem(SESSION_KEY)}).finally(()=>setChecking(false));
  },[]);
+ useEffect(()=>{
+  if(!checking&&user&&!isAdmin&&route!=="home"&&!userAllowedRoutes.includes(route))location.replace("/");
+ },[checking,user,isAdmin,route]);
  async function logout(){try{await api("logout")}catch{}localStorage.removeItem(SESSION_KEY);setUser(null);if(route!=="home")location.replace("/");}
  if(checking)return <div className="loading"><motion.div className="loader" animate={{scale:[.92,1.05,.92],opacity:[.55,1,.55]}} transition={{duration:1.1,repeat:Infinity,ease:"easeInOut"}}/></div>;
+ if(user&&!isAdmin&&route!=="home"&&!userAllowedRoutes.includes(route))return <div className="loading"><span>Redirecting to your workspace…</span></div>;
  if(route!=="home"){
   const pages={admin:adminPage,users:usersPage,areas:areasPage,database:databasePage,agents:agentsPage,leads:leadsPage,roulette:roulettePage};
   return <div className="crm-route-layout"><Sidebar user={user} active={route} onLogout={logout}/><div className="crm-route-content"><LegacyPage html={pages[route]}/></div></div>;
