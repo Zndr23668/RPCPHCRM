@@ -192,7 +192,7 @@ $("prevBtn").addEventListener("click",()=>{if(page>0){page--;render();}});
 $("nextBtn").addEventListener("click",()=>{if((page+1)*PAGE_SIZE<allAgents.length){page++;render();}});
 $("closeProfile").addEventListener("click",closeProfile);
 $("profileOverlay").addEventListener("click",e=>{if(e.target===$("profileOverlay"))closeProfile();});
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeProfile();});
+const onDocumentKeydown=e=>{if(e.key==="Escape")closeProfile();};document.addEventListener("keydown",onDocumentKeydown);window.RPCPHRegisterRouteCleanup?.(()=>document.removeEventListener("keydown",onDocumentKeydown));
 $("editToggle").addEventListener("click",()=>$("editPanel").classList.toggle("open"));
 $("cancelEdit").addEventListener("click",()=>{if(selectedAgent)fillEditor(selectedAgent);$("editPanel").classList.remove("open");});
 $("saveEdit").addEventListener("click",saveProfile);
