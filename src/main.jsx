@@ -203,7 +203,7 @@ function LegacyPage({route}){
      const script=document.createElement("script");
      // A fresh function scope keeps each legacy page's const/let declarations
      // from colliding with scripts from pages visited earlier in this SPA session.
-     script.textContent="(()=>{const __rpcphLegacyCleanups=[];const __rpcphDocument=globalThis.document;const document=new Proxy(__rpcphDocument,{get(target,property){if(property==="addEventListener")return(type,listener,options)=>{target.addEventListener(type,listener,options);__rpcphLegacyCleanups.push(()=>target.removeEventListener(type,listener,options));};const value=Reflect.get(target,property,target);return typeof value==="function"?value.bind(target):value;}});try{\n"+source.textContent+"\n}finally{globalThis.RPCPHRegisterRouteCleanup?.(()=>__rpcphLegacyCleanups.forEach(cleanup=>cleanup()));}})();";
+     script.textContent="(()=>{\n"+source.textContent+"\n})();";
      document.body.appendChild(script);
      addedScripts.push(script);
     }
