@@ -6,13 +6,6 @@ import "./styles.css";
 /* Legacy workflow documents are mounted inside the React route shell until each
    workflow is fully componentized. Their original Supabase calls, validation,
    upload parsing, history handling, and permission checks remain intact. */
-import adminPage from "../Admin/index.html?raw";
-import usersPage from "../Admin/Users/index.html?raw";
-import areasPage from "../Areas/index.html?raw";
-import databasePage from "../DB/index.html?raw";
-import agentsPage from "../Agents/index.html?raw";
-import leadsPage from "../Leads/index.html?raw";
-import roulettePage from "../Roulette/index.html?raw";
 
 const API="https://pfuomojvcuwbvqtzvglb.supabase.co/functions/v1/rpcph-local-auth";
 const KEY="sb_publishable__W9mPIcJIZ7QDhzbKWNm_g_IsEMgMUt";
@@ -64,7 +57,7 @@ function countyFromPlace(place){
 
 
 function routeForPath(path){
- const p=path.replace(/\/+$/,"")||"/";
+ const p=path.replace(/\\/+$/, "")||"/";
  if(p==="/Admin/Users"||p==="/Admin/Users/index.html")return "users";
  if(p==="/Admin"||p==="/Admin/index.html")return "admin";
  if(p==="/Areas"||p==="/Areas/index.html")return "areas";
@@ -74,15 +67,77 @@ function routeForPath(path){
  if(p==="/Roulette"||p==="/Roulette/index.html")return "roulette";
  return "home";
 }
+const PAGE_IMPORTERS={
+ admin:()=>import("../Admin/index.html?raw").then(module=>module.default),
+ users:()=>import("../Admin/Users/index.html?raw").then(module=>module.default),
+ areas:()=>import("../Areas/index.html?raw").then(module=>module.default),
+ database:()=>import("../DB/index.html?raw").then(module=>module.default),
+ agents:()=>import("../Agents/index.html?raw").then(module=>module.default),
+ leads:()=>import("../Leads/index.html?raw").then(module=>module.default),
+ roulette:()=>import("../Roulette/index.html?raw").then(module=>module.default)
+};
+const PAGE_CACHE=new Map();
+function loadPageHtml(route){
+ const cached=PAGE_CACHE.get(route);
+ if(cached)return Promise.resolve(cached);
+ const importer=PAGE_IMPORTERS[route];
+ if(!importer)return Promise.reject(new Error("This CRM page could not be found."));
+ const pending=Promise.resolve().then(importer).then(html=>{
+  PAGE_CACHE.set(route,html);
+  return html;
+ }).catch(error=>{
+  PAGE_CACHE.delete(route);
+  throw error;
+ });
+ PAGE_CACHE.set(route,pending);
+ return pending;
+}
+function prefetchPageForPath(path){
+ const route=routeForPath(path);
+ if(route!=="home")loadPageHtml(route).catch(()=>{});
+}
+function locationKeyNow(){
+ return window.location.pathname+window.location.search+window.location.hash;
+}
+function isKnownAppPath(path){
+ const p=path.replace(/\\/+$/, "")||"/";
+ return p==="/"||p==="/Login"||
+  ["/Admin","/Admin/index.html","/Admin/Users","/Admin/Users/index.html","/Areas","/Areas/index.html","/DB","/DB/index.html","/Agents","/Agents/index.html","/Leads","/Leads/index.html","/Roulette","/Roulette/index.html"].includes(p);
+}
 
 /* A React-owned route host for the existing complex workflow markup.
    Scripts are rehydrated in source order only after the DOM is mounted. */
-function LegacyPage({html}){
+function LegacyPage({route}){
  const host=useRef(null);
+ const [html,setHtml]=useState(()=>{
+  const cached=PAGE_CACHE.get(route);
+  return typeof cached==="string"?cached:"";
+ });
+ const [loadError,setLoadError]=useState("");
+
  useEffect(()=>{
+  let active=true;
+  const cached=PAGE_CACHE.get(route);
+  if(typeof cached==="string"){
+   setHtml(cached);
+   setLoadError("");
+   return ()=>{active=false;};
+  }
+  setHtml("");
+  setLoadError("");
+  loadPageHtml(route).then(value=>{
+   if(active)setHtml(value);
+  }).catch(error=>{
+   if(active)setLoadError(error.message||"Could not open this CRM page.");
+  });
+  return ()=>{active=false;};
+ },[route]);
+
+ useEffect(()=>{
+  if(!html||!host.current)return;
+  let disposed=false;
   const parsed=new DOMParser().parseFromString(html,"text/html");
   const root=host.current;
-  if(!root)return;
   const addedStyles=[];
   const addedLinks=[];
   const addedScripts=[];
@@ -91,60 +146,81 @@ function LegacyPage({html}){
   parsed.querySelectorAll("style").forEach(source=>{
    const style=document.createElement("style");
    style.textContent=source.textContent||"";
-   document.head.appendChild(style);addedStyles.push(style);
+   document.head.appendChild(style);
+   addedStyles.push(style);
   });
   parsed.querySelectorAll('link[rel="stylesheet"]').forEach(source=>{
    const href=source.getAttribute("href");
    if(!href)return;
-   let existing=[...document.querySelectorAll('link[rel="stylesheet"]')].find(x=>x.getAttribute("href")===href);
+   const existing=[...document.querySelectorAll('link[rel="stylesheet"]')].find(x=>x.getAttribute("href")===href);
    if(!existing){
-    const link=document.createElement("link");link.rel="stylesheet";link.href=href;
-    document.head.appendChild(link);addedLinks.push(link);
+    const link=document.createElement("link");
+    link.rel="stylesheet";
+    link.href=href;
+    document.head.appendChild(link);
+    if(href.endsWith("/crm-motion.css"))link.dataset.rpcphShared="true";
+    else addedLinks.push(link);
    }
   });
-  const content=[...parsed.body.childNodes].filter(n=>n.nodeName!=="SCRIPT");
-  root.replaceChildren(...content.map(n=>document.importNode(n,true)));
+  const content=[...parsed.body.childNodes].filter(node=>node.nodeName!=="SCRIPT");
+  root.replaceChildren(...content.map(node=>document.importNode(node,true)));
 
   const runScripts=async()=>{
    const sources=[...parsed.querySelectorAll("script")];
    for(const source of sources){
+    if(disposed)return;
     const src=source.getAttribute("src");
     if(src){
      if(src.includes("supabase-js")&&window.supabase)continue;
      if(src.includes("xlsx")&&window.XLSX)continue;
      if(src.endsWith("/local-auth.js")&&window.RPCPHAuth)continue;
+     if(src.endsWith("/crm-motion.js")&&window.RPCPHMotionRefresh){
+      window.RPCPHMotionRefresh(root);
+      continue;
+     }
      const script=document.createElement("script");
-     [...source.attributes].forEach(a=>script.setAttribute(a.name,a.value));
+     [...source.attributes].forEach(attribute=>script.setAttribute(attribute.name,attribute.value));
      if(source.async===false)script.async=false;
      const loaded=new Promise((resolve,reject)=>{
       script.onload=resolve;
       script.onerror=()=>reject(new Error("Could not load page dependency: "+src));
      });
-     document.body.appendChild(script);addedScripts.push(script);
+     document.body.appendChild(script);
+     addedScripts.push(script);
      await loaded;
+     if(disposed)return;
+     if(src.endsWith("/crm-motion.js"))window.RPCPHMotionRefresh?.(root);
     }else if(source.textContent?.trim()){
      const script=document.createElement("script");
      script.textContent=source.textContent;
-     document.body.appendChild(script);addedScripts.push(script);
+     document.body.appendChild(script);
+     addedScripts.push(script);
     }
    }
   };
   runScripts().catch(error=>{
-   const n=document.createElement("div");
-   n.className="legacy-load-error";
-   n.textContent=error.message||"A page dependency failed to load.";
-   root.prepend(n);
+   if(disposed)return;
+   const notice=document.createElement("div");
+   notice.className="legacy-load-error";
+   notice.textContent=error.message||"A page dependency failed to load.";
+   root.prepend(notice);
    document.documentElement.classList.remove("auth-pending");
   });
   return ()=>{
-   addedScripts.forEach(s=>s.remove());
-   addedStyles.forEach(s=>s.remove());
-   addedLinks.forEach(s=>s.remove());
+   disposed=true;
+   addedScripts.forEach(script=>script.remove());
+   addedStyles.forEach(style=>style.remove());
+   addedLinks.forEach(link=>link.remove());
    document.documentElement.classList.remove("auth-pending");
    document.title=previousTitle;
    root.replaceChildren();
   };
  },[html]);
+
+ if(!html)return <div className="route-loading" role="status" aria-live="polite">
+  <div className="route-loading-indicator"/>
+  <div className="route-loading-copy"><strong>{loadError?"Page unavailable":"Opening workspace"}</strong><span>{loadError||"Preparing your CRM tools…"}</span></div>
+ </div>;
  return <div className="legacy-screen" ref={host}/>;
 }
 
@@ -335,17 +411,81 @@ function Dashboard({user,onLogout}){
 }
 
 function App(){
- const [user,setUser]=useState(null);const [checking,setChecking]=useState(true);
- const route=routeForPath(window.location.pathname);
+ const [user,setUser]=useState(null);
+ const [checking,setChecking]=useState(true);
+ const [locationKey,setLocationKey]=useState(()=>locationKeyNow());
+ const route=routeForPath(new URL(locationKey,window.location.origin).pathname);
+
  useEffect(()=>{
-  api("me").then(d=>setUser(d.user||d)).catch(()=>{localStorage.removeItem(SESSION_KEY)}).finally(()=>setChecking(false));
+  const syncLocation=()=>setLocationKey(locationKeyNow());
+  const navigate=(destination,replace=false)=>{
+   const target=new URL(destination,window.location.href);
+   if(target.origin!==window.location.origin){
+    window.location.assign(target.href);
+    return;
+   }
+   if(replace)window.history.replaceState({}, "", target.href);
+   else window.history.pushState({}, "", target.href);
+   syncLocation();
+  };
+  const prefetchFromEvent=event=>{
+   const anchor=event.target?.closest?.("a[href]");
+   if(!anchor||anchor.target==="_blank")return;
+   try{
+    const target=new URL(anchor.href,window.location.href);
+    if(target.origin===window.location.origin&&isKnownAppPath(target.pathname))prefetchPageForPath(target.pathname);
+   }catch{}
+  };
+  const handleInternalClick=event=>{
+   if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
+   const anchor=event.target?.closest?.("a[href]");
+   if(!anchor||anchor.hasAttribute("download")||(anchor.target&&anchor.target!=="_self"))return;
+   const href=anchor.getAttribute("href");
+   if(!href||href.startsWith("#")||href.startsWith("javascript:"))return;
+   let target;
+   try{target=new URL(anchor.href,window.location.href);}catch{return;}
+   if(target.origin!==window.location.origin||!isKnownAppPath(target.pathname))return;
+   event.preventDefault();
+   const destination=target.pathname+target.search+target.hash;
+   if(destination!==locationKeyNow())navigate(destination);
+  };
+  window.RPCPHNavigate=navigate;
+  document.addEventListener("pointerover",prefetchFromEvent,true);
+  document.addEventListener("focusin",prefetchFromEvent,true);
+  document.addEventListener("click",handleInternalClick,true);
+  window.addEventListener("popstate",syncLocation);
+  return ()=>{
+   document.removeEventListener("pointerover",prefetchFromEvent,true);
+   document.removeEventListener("focusin",prefetchFromEvent,true);
+   document.removeEventListener("click",handleInternalClick,true);
+   window.removeEventListener("popstate",syncLocation);
+   if(window.RPCPHNavigate===navigate)delete window.RPCPHNavigate;
+  };
  },[]);
- async function logout(){try{await api("logout")}catch{}localStorage.removeItem(SESSION_KEY);setUser(null);if(route!=="home")location.replace("/");}
+
+ useEffect(()=>{
+  api("me").then(data=>{
+   const current=data.user||data;
+   window.RPCPH_CURRENT_USER=current;
+   setUser(current);
+  }).catch(()=>{
+   localStorage.removeItem(SESSION_KEY);
+   window.RPCPH_CURRENT_USER=null;
+  }).finally(()=>setChecking(false));
+ },[]);
+
+ async function logout(){
+  try{await api("logout")}catch{}
+  localStorage.removeItem(SESSION_KEY);
+  window.RPCPH_CURRENT_USER=null;
+  setUser(null);
+  if(route!=="home")window.RPCPHNavigate?.("/");
+ }
  if(checking)return <div className="loading"><motion.div className="loader" animate={{scale:[.92,1.05,.92],opacity:[.55,1,.55]}} transition={{duration:1.1,repeat:Infinity,ease:"easeInOut"}}/></div>;
  if(route!=="home"){
-  const pages={admin:adminPage,users:usersPage,areas:areasPage,database:databasePage,agents:agentsPage,leads:leadsPage,roulette:roulettePage};
-  return <div className="crm-route-layout"><Sidebar user={user} active={route} onLogout={logout}/><div className="crm-route-content"><LegacyPage html={pages[route]}/></div></div>;
+  return <div className="crm-route-layout"><Sidebar user={user} active={route} onLogout={logout}/><div className="crm-route-content"><LegacyPage key={locationKey} route={route}/></div></div>;
  }
- return <AnimatePresence mode="wait">{user?<motion.div key="app" className="screen" initial={{opacity:0,scale:1.012}} animate={{opacity:1,scale:1}} transition={{duration:.55,ease}}><Dashboard user={user} onLogout={logout}/></motion.div>:<motion.div key="login" className="screen" initial={{opacity:0,scale:.995}} animate={{opacity:1,scale:1}} exit={{opacity:0,scale:1.012}} transition={{duration:.48,ease}}><Login onLogin={setUser}/></motion.div>}</AnimatePresence>
+ return <AnimatePresence mode="wait">{user?<motion.div key="app" className="screen" initial={{opacity:0,scale:1.012}} animate={{opacity:1,scale:1}} transition={{duration:.55,ease}}><Dashboard user={user} onLogout={logout}/></motion.div>:<motion.div key="login" className="screen" initial={{opacity:0,scale:.995}} animate={{opacity:1,scale:1}} exit={{opacity:0,scale:1.012}} transition={{duration:.48,ease}}><Login onLogin={nextUser=>{window.RPCPH_CURRENT_USER=nextUser;setUser(nextUser);}}/></motion.div>}</AnimatePresence>
 }
+
 createRoot(document.getElementById("root")).render(<App/>);
