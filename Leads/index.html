@@ -77,10 +77,14 @@ function render(){
  $("resultLabel").textContent=filtered.length+" of "+allLeads.length+" lead records";
  document.querySelectorAll("[data-expand]").forEach(btn=>btn.addEventListener("click",()=>{const i=btn.dataset.expand,detail=document.querySelector('[data-detail="'+i+'"]');detail.hidden=!detail.hidden;btn.textContent=btn.textContent.replace(detail.hidden?"▴":"▾",detail.hidden?"▾":"▴");}));
 }
-async function load(){
- $("refreshBtn").disabled=true;$("searchBtn").disabled=true;$("rows").innerHTML='<tr><td colspan="9" class="empty">Loading lead history…</td></tr>';$("notice").className="notice";
+async function load(force=false){
+ const hasPrevious=allLeads.length>0;
+ $("refreshBtn").disabled=true;$("searchBtn").disabled=true;
+ if(!hasPrevious)$("rows").innerHTML='<tr><td colspan="9" class="empty">Loading lead history…</td></tr>';
+ else $("resultLabel").textContent="Updating lead records…";
+ $("notice").className="notice";
  try{
-  const result=await RPCPHAuth.api("leads_listing");allLeads=result.leads||[];
+  const result=await RPCPHAuth.api("leads_listing",{}, {fresh:force});allLeads=result.leads||[];
   const assigned=allLeads.filter(x=>x.assignment_status==="assigned").length;
   const declines=allLeads.reduce((n,x)=>n+(x.activity||[]).filter(e=>e.status==="declined").length,0);
   $("totalCount").textContent=allLeads.length.toLocaleString();$("assignedCount").textContent=assigned.toLocaleString();$("openCount").textContent=(allLeads.length-assigned).toLocaleString();$("declineCount").textContent=declines.toLocaleString();
@@ -93,10 +97,10 @@ async function load(){
       if(detail){detail.hidden=false;detail.scrollIntoView({behavior:"smooth",block:"center"});}
     }else notify("The linked lead is not in the current listing.","info");
   }
- }catch(error){allLeads=[];render();notify(error.message||"Could not load lead listings.","warn");}
+ }catch(error){if(!hasPrevious)render();notify(hasPrevious?"Could not refresh the lead listing. Previously loaded records are still shown.":(error.message||"Could not load lead listings."),"warn");}
  finally{$("refreshBtn").disabled=false;$("searchBtn").disabled=false;}
 }
-$("searchBtn").addEventListener("click",render);$("refreshBtn").addEventListener("click",load);$("search").addEventListener("keydown",e=>{if(e.key==="Enter")render();});$("statusFilter").addEventListener("change",render);
+$("searchBtn").addEventListener("click",render);$("refreshBtn").addEventListener("click",()=>load(true));$("search").addEventListener("keydown",e=>{if(e.key==="Enter")render();});$("statusFilter").addEventListener("change",render);
 load();
 </script>
 <script>RPCPHAuth.requireAuth(["admin","superadmin","user","employee"]).catch(()=>location.replace("/Login/"));</script>
