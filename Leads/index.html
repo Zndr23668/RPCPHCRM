@@ -99,6 +99,6 @@ async function load(){
 $("searchBtn").addEventListener("click",render);$("refreshBtn").addEventListener("click",load);$("search").addEventListener("keydown",e=>{if(e.key==="Enter")render();});$("statusFilter").addEventListener("change",render);
 load();
 </script>
-<script>RPCPHAuth.requireAuth(["admin","superadmin"]).catch(()=>location.replace("/Login/"));</script>
+<script>RPCPHAuth.requireAuth(["admin","superadmin","user","employee"]).catch(()=>location.replace("/Login/"));</script>
 <script src="/crm-motion.js" defer></script>
 </body></html>
