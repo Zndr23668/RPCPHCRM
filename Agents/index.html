@@ -194,6 +194,6 @@ $("cancelEdit").addEventListener("click",()=>{if(selectedAgent)fillEditor(select
 $("saveEdit").addEventListener("click",saveProfile);
 loadAgents();
 </script>
-<script>RPCPHAuth.requireAuth(["admin","superadmin","user","employee"]).catch(()=>location.replace("/Login/"));</script>
+<script>RPCPHAuth.requireAuth(["admin","superadmin","user","employee"]).then(user=>{if(user&&!["admin","superadmin"].includes(user.role)){const editButton=document.getElementById("editToggle");const editPanel=document.getElementById("editPanel");if(editButton)editButton.hidden=true;if(editPanel)editPanel.hidden=true;}}).catch(()=>location.replace("/Login/"));</script>
 <script src="/crm-motion.js" defer></script>
 </body></html>
