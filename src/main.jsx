@@ -199,7 +199,7 @@ function LegacyPage({route}){
      const script=document.createElement("script");
      // A fresh function scope keeps each legacy page's const/let declarations
      // from colliding with scripts from pages visited earlier in this SPA session.
-     script.textContent="(()=>{\\n"+source.textContent+"\\n})();";
+     script.textContent="(()=>{\n"+source.textContent+"\n})();";
      document.body.appendChild(script);
      addedScripts.push(script);
     }
