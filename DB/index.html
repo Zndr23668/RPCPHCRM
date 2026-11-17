@@ -253,7 +253,7 @@ $("nextBtn").addEventListener("click",()=>{if((page+1)*PAGE_SIZE<total){page++;l
 $("exportBtn").addEventListener("click",exportPage);
 $("closeModal").addEventListener("click",closeDetails);
 $("modal").addEventListener("click",event=>{if(event.target===$("modal"))closeDetails();});
-document.addEventListener("keydown",event=>{if(event.key==="Escape")closeDetails();});
+const onDocumentKeydown=event=>{if(event.key==="Escape")closeDetails();};document.addEventListener("keydown",onDocumentKeydown);window.RPCPHRegisterRouteCleanup?.(()=>document.removeEventListener("keydown",onDocumentKeydown));
 loadRows();
 </script>
 <script>RPCPHAuth.requireAuth(["admin","superadmin"]).catch(()=>location.replace("/Login/"));</script>
