@@ -62,7 +62,7 @@ function countyFromPlace(place){
 
 
 function routeForPath(path){
- const p=path.replace(/\\/+$/, "")||"/";
+ const p=path.replace(/\/+$/, "")||"/";
  if(p==="/Admin/Users"||p==="/Admin/Users/index.html")return "users";
  if(p==="/Admin"||p==="/Admin/index.html")return "admin";
  if(p==="/Areas"||p==="/Areas/index.html")return "areas";
@@ -105,7 +105,7 @@ function locationKeyNow(){
  return window.location.pathname+window.location.search+window.location.hash;
 }
 function isKnownAppPath(path){
- const p=path.replace(/\\/+$/, "")||"/";
+ const p=path.replace(/\/+$/, "")||"/";
  return p==="/"||p==="/Login"||
   ["/Admin","/Admin/index.html","/Admin/Users","/Admin/Users/index.html","/Areas","/Areas/index.html","/DB","/DB/index.html","/Agents","/Agents/index.html","/Leads","/Leads/index.html","/Roulette","/Roulette/index.html"].includes(p);
 }
