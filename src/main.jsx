@@ -11,11 +11,15 @@ const API="https://pfuomojvcuwbvqtzvglb.supabase.co/functions/v1/rpcph-local-aut
 const KEY="sb_publishable__W9mPIcJIZ7QDhzbKWNm_g_IsEMgMUt";
 const SESSION_KEY="rpcph_local_session_v1";
 
+let dashboardMetricsCache=null;
 async function api(action,payload={}){
+ if(action==="dashboard_metrics"&&dashboardMetricsCache&&dashboardMetricsCache.expiresAt>Date.now())return dashboardMetricsCache.value;
  const token=localStorage.getItem(SESSION_KEY);
  const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json","apikey":KEY},body:JSON.stringify({action,...payload,...(token?{token}:{})})});
  const data=await r.json().catch(()=>({}));
  if(!r.ok)throw new Error(data.error||data.message||"Request failed");
+ if(action==="dashboard_metrics")dashboardMetricsCache={value:data,expiresAt:Date.now()+8000};
+ if(action==="create_lead"||action==="respond_roulette_offer")dashboardMetricsCache=null;
  return data;
 }
 const ease=[.16,1,.3,1];
@@ -33,6 +37,7 @@ const NC_COUNTIES = new Set([
  "Rowan","Rutherford","Sampson","Scotland","Stanly","Stokes","Surry","Swain","Transylvania","Tyrrell",
  "Union","Vance","Wake","Warren","Washington","Watauga","Wayne","Wilkes","Wilson","Yadkin","Yancey"
 ]);
+const LOCATION_CACHE=new Map();
 function normalizeNcCounty(value){
  const raw=String(value||"").trim().replace(/\s+/g," ");
  const base=raw.replace(/\s+County$/i,"").trim();
@@ -57,7 +62,7 @@ function countyFromPlace(place){
 
 
 function routeForPath(path){
- const p=path.replace(/\\/+$/, "")||"/";
+ const p=path.replace(/\/+$/, "")||"/";
  if(p==="/Admin/Users"||p==="/Admin/Users/index.html")return "users";
  if(p==="/Admin"||p==="/Admin/index.html")return "admin";
  if(p==="/Areas"||p==="/Areas/index.html")return "areas";
@@ -100,7 +105,7 @@ function locationKeyNow(){
  return window.location.pathname+window.location.search+window.location.hash;
 }
 function isKnownAppPath(path){
- const p=path.replace(/\\/+$/, "")||"/";
+ const p=path.replace(/\/+$/, "")||"/";
  return p==="/"||p==="/Login"||
   ["/Admin","/Admin/index.html","/Admin/Users","/Admin/Users/index.html","/Areas","/Areas/index.html","/DB","/DB/index.html","/Agents","/Agents/index.html","/Leads","/Leads/index.html","/Roulette","/Roulette/index.html"].includes(p);
 }
@@ -313,7 +318,43 @@ function Dashboard({user,onLogout}){
  const [agents,setAgents]=useState([]);const [expandedAgents,setExpandedAgents]=useState([]);const [showMore,setShowMore]=useState(false);const [status,setStatus]=useState("");const [loading,setLoading]=useState(false);const [rouletteOffer,setRouletteOffer]=useState(null);const [rouletteEvents,setRouletteEvents]=useState({});const [respondingAgent,setRespondingAgent]=useState(null);const [declineTarget,setDeclineTarget]=useState(null);const [declineReason,setDeclineReason]=useState("");const [declineBusy,setDeclineBusy]=useState(false);const [currentLead,setCurrentLead]=useState(null);
  const [locationSuggestions,setLocationSuggestions]=useState([]);const [suggestionsOpen,setSuggestionsOpen]=useState(false);const [suggestionsLoading,setSuggestionsLoading]=useState(false);const [selectedLocation,setSelectedLocation]=useState(null);
  const [metrics,setMetrics]=useState([{n:"—",l:"Active leads",detail:"Loading live data…"},{n:"—",l:"Agents available",detail:"Loading live data…"},{n:"—",l:"Top lead source",detail:"Loading lead-source mix…"}]);
- useEffect(()=>{const query=lead.location.trim();if(query.length<3){setLocationSuggestions([]);setSuggestionsOpen(false);setSuggestionsLoading(false);return;}const controller=new AbortController();const timer=setTimeout(async()=>{setSuggestionsLoading(true);try{const scopedQuery=/\b(north carolina|nc)\b/i.test(query)?query:query+", North Carolina, USA";const url="https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=10&countrycodes=us&q="+encodeURIComponent(scopedQuery);const response=await fetch(url,{headers:{Accept:"application/json"},signal:controller.signal});if(!response.ok)throw new Error("Location suggestions unavailable");const data=await response.json();const northCarolinaPlaces=(Array.isArray(data)?data:[]).filter(isNorthCarolinaPlace);setLocationSuggestions(northCarolinaPlaces.slice(0,6));setSuggestionsOpen(true);}catch(error){if(error.name!=="AbortError")setLocationSuggestions([]);}finally{if(!controller.signal.aborted)setSuggestionsLoading(false);}},450);return()=>{clearTimeout(timer);controller.abort();};},[lead.location]);
+ useEffect(()=>{
+  const query=lead.location.trim();
+  if(query.length<3){
+   setLocationSuggestions([]);
+   setSuggestionsOpen(false);
+   setSuggestionsLoading(false);
+   return;
+  }
+  const cacheKey=query.toLocaleLowerCase();
+  const cached=LOCATION_CACHE.get(cacheKey);
+  if(cached&&cached.expiresAt>Date.now()){
+   setLocationSuggestions(cached.places);
+   setSuggestionsOpen(true);
+   setSuggestionsLoading(false);
+   return;
+  }
+  const controller=new AbortController();
+  const timer=setTimeout(async()=>{
+   setSuggestionsLoading(true);
+   try{
+    const scopedQuery=/\b(north carolina|nc)\b/i.test(query)?query:query+", North Carolina, USA";
+    const url="https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=10&countrycodes=us&q="+encodeURIComponent(scopedQuery);
+    const response=await fetch(url,{headers:{Accept:"application/json"},signal:controller.signal});
+    if(!response.ok)throw new Error("Location suggestions unavailable");
+    const data=await response.json();
+    const places=(Array.isArray(data)?data:[]).filter(isNorthCarolinaPlace).slice(0,6);
+    LOCATION_CACHE.set(cacheKey,{places,expiresAt:Date.now()+5*60_000});
+    setLocationSuggestions(places);
+    setSuggestionsOpen(true);
+   }catch(error){
+    if(error.name!=="AbortError")setLocationSuggestions([]);
+   }finally{
+    if(!controller.signal.aborted)setSuggestionsLoading(false);
+   }
+  },320);
+  return ()=>{clearTimeout(timer);controller.abort();};
+ },[lead.location]);
  function chooseLocation(place){const geo=countyFromPlace(place);setLead(current=>({...current,location:place.display_name}));setSelectedLocation({latitude:Number(place.lat),longitude:Number(place.lon),label:place.display_name,county:geo.county,state:geo.state});setLocationSuggestions([]);setSuggestionsOpen(false);}
  async function refreshMetrics(){
   try{
@@ -341,9 +382,14 @@ function Dashboard({user,onLogout}){
    if(!origin){
     const rawLocation=lead.location.trim();
     const scopedQuery=/\b(north carolina|nc)\b/i.test(rawLocation)?rawLocation:rawLocation+", North Carolina, USA";
-    const geo=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=10&addressdetails=1&countrycodes=us&q="+encodeURIComponent(scopedQuery),{headers:{"Accept":"application/json"}});
-    const places=await geo.json();
-    const northCarolinaPlace=(Array.isArray(places)?places:[]).find(place=>isNorthCarolinaPlace(place));
+    const cached=LOCATION_CACHE.get(rawLocation.toLocaleLowerCase());
+    let northCarolinaPlace=cached&&cached.expiresAt>Date.now()?cached.places.find(place=>isNorthCarolinaPlace(place)):null;
+    if(!northCarolinaPlace){
+     const geo=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=10&addressdetails=1&countrycodes=us&q="+encodeURIComponent(scopedQuery),{headers:{"Accept":"application/json"}});
+     const places=await geo.json();
+     northCarolinaPlace=(Array.isArray(places)?places:[]).find(place=>isNorthCarolinaPlace(place));
+     if(northCarolinaPlace)LOCATION_CACHE.set(rawLocation.toLocaleLowerCase(),{places:[northCarolinaPlace],expiresAt:Date.now()+5*60_000});
+    }
     if(!northCarolinaPlace)throw new Error("North Carolina only: choose a city, town, county, or ZIP code located in NC.");
     const resolved=countyFromPlace(northCarolinaPlace);
     origin={latitude:Number(northCarolinaPlace.lat),longitude:Number(northCarolinaPlace.lon),label:northCarolinaPlace.display_name,county:resolved.county,state:resolved.state};
