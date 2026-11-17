@@ -146,6 +146,10 @@ function LegacyPage({route}){
   const addedStyles=[];
   const addedLinks=[];
   const addedScripts=[];
+  const addedEventCleanups=[];
+  const previousRegistrar=window.RPCPHRegisterRouteCleanup;
+  const routeRegistrar=cleanup=>{if(typeof cleanup==="function")addedEventCleanups.push(cleanup);};
+  window.RPCPHRegisterRouteCleanup=routeRegistrar;
   const previousTitle=document.title;
   if(parsed.title)document.title=parsed.title;
   parsed.querySelectorAll("style").forEach(source=>{
@@ -199,7 +203,7 @@ function LegacyPage({route}){
      const script=document.createElement("script");
      // A fresh function scope keeps each legacy page's const/let declarations
      // from colliding with scripts from pages visited earlier in this SPA session.
-     script.textContent="(()=>{\n"+source.textContent+"\n})();";
+     script.textContent="(()=>{const __rpcphLegacyCleanups=[];const __rpcphDocument=globalThis.document;const document=new Proxy(__rpcphDocument,{get(target,property){if(property==="addEventListener")return(type,listener,options)=>{target.addEventListener(type,listener,options);__rpcphLegacyCleanups.push(()=>target.removeEventListener(type,listener,options));};const value=Reflect.get(target,property,target);return typeof value==="function"?value.bind(target):value;}});try{\n"+source.textContent+"\n}finally{globalThis.RPCPHRegisterRouteCleanup?.(()=>__rpcphLegacyCleanups.forEach(cleanup=>cleanup()));}})();";
      document.body.appendChild(script);
      addedScripts.push(script);
     }
@@ -215,6 +219,11 @@ function LegacyPage({route}){
   });
   return ()=>{
    disposed=true;
+   addedEventCleanups.forEach(cleanup=>{try{cleanup()}catch{}});
+   if(window.RPCPHRegisterRouteCleanup===routeRegistrar){
+    if(previousRegistrar)window.RPCPHRegisterRouteCleanup=previousRegistrar;
+    else delete window.RPCPHRegisterRouteCleanup;
+   }
    addedScripts.forEach(script=>script.remove());
    // These are intentionally exported by individual legacy pages for their
    // generated controls; remove them when their owning page is unmounted.
