@@ -98,7 +98,7 @@ html.auth-pending body{visibility:hidden}
 <script>
 const $=id=>document.getElementById(id);
 const PAGE_SIZE=30;
-let allAgents=[],rows=[],page=0,total=0,selectedAgent=null,historyCache=new Map();
+let allAgents=[],rows=[],page=0,total=0,selectedAgent=null,historyCache=new Map(),searchTimer=null;
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function initials(name){return String(name||"Agent").split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join("").toUpperCase();}
 function fmt(v){if(!v)return "—";const d=new Date(v);return Number.isNaN(d.getTime())?"—":d.toLocaleString();}
@@ -140,13 +140,16 @@ function render(){
  $("pagerInfo").textContent="Showing "+(allAgents.length?start+1:0)+"–"+Math.min(start+PAGE_SIZE,allAgents.length)+" of "+allAgents.length;
  $("prevBtn").disabled=page===0;$("nextBtn").disabled=(page+1)*PAGE_SIZE>=allAgents.length;
 }
-async function loadAgents(){
+async function loadAgents(force=false){
+ const hasPrevious=allAgents.length>0;
  $("refreshBtn").disabled=true;$("searchBtn").disabled=true;
- $("agentGrid").innerHTML='<div class="empty">Loading agent directory…</div>';$("notice").className="notice";
+ if(!hasPrevious)$("agentGrid").innerHTML='<div class="empty">Loading agent directory…</div>';
+ else $("resultLabel").textContent="Updating matches…";
+ $("notice").className="notice";
  try{
-  const result=await RPCPHAuth.api("agent_profiles",{search:$("search").value.trim(),status:$("status").value,sort:$("sort").value});
+  const result=await RPCPHAuth.api("agent_profiles",{search:$("search").value.trim(),status:$("status").value,sort:$("sort").value},{fresh:force});
   allAgents=result.agents||[];page=0;render();
- }catch(e){allAgents=[];render();notify(e.message||"Could not load agents.","warn");}
+ }catch(e){if(!hasPrevious){allAgents=[];render();}notify(hasPrevious?"Could not refresh the agent search. Previously loaded results are still shown.":(e.message||"Could not load agents."),"warn");}
  finally{$("refreshBtn").disabled=false;$("searchBtn").disabled=false;}
 }
 function dateCell(v){return esc(fmt(v));}
@@ -181,8 +184,9 @@ async function saveProfile(){
  }catch(e){$("editStatus").className="notice show warn";$("editStatus").textContent=e.message||"Could not save profile.";}
  finally{btn.disabled=false;}
 }
-$("searchBtn").addEventListener("click",loadAgents);$("refreshBtn").addEventListener("click",loadAgents);
-$("search").addEventListener("keydown",e=>{if(e.key==="Enter")loadAgents();});
+$("searchBtn").addEventListener("click",loadAgents);$("refreshBtn").addEventListener("click",()=>loadAgents(true));
+$("search").addEventListener("input",()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>loadAgents(),320);});
+$("search").addEventListener("keydown",e=>{if(e.key==="Enter"){clearTimeout(searchTimer);loadAgents();}});
 $("status").addEventListener("change",loadAgents);$("sort").addEventListener("change",loadAgents);
 $("prevBtn").addEventListener("click",()=>{if(page>0){page--;render();}});
 $("nextBtn").addEventListener("click",()=>{if((page+1)*PAGE_SIZE<allAgents.length){page++;render();}});
