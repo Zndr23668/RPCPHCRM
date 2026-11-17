@@ -153,19 +153,27 @@ function makeQuery(){
  else q=q.order("created_at",{ascending:sort==="oldest",nullsFirst:false});
  return q.range(page*PAGE_SIZE,(page+1)*PAGE_SIZE-1);
 }
-async function loadRows(){
+async function loadRows(force=false){
  const btn=$("searchBtn"),refresh=$("refreshBtn");
+ const cacheKey="db:agents:"+JSON.stringify([searchValue(),$("status").value,$("sort").value,page]);
+ const cached=!force?window.RPCPHDataCache?.get(cacheKey):undefined;
  btn.disabled=true;refresh.disabled=true;
- $("rows").innerHTML='<tr><td colspan="9" class="empty">Loading records…</td></tr>';
+ if(cached){
+  currentRows=cached.rows||[];total=Number(cached.total)||0;
+  renderRows();
+ }else{
+  $("rows").innerHTML='<tr><td colspan="9" class="empty">Loading records…</td></tr>';
+ }
  hideNotice();
  try{
   const {data,error,count}=await makeQuery();
   if(error)throw error;
   currentRows=data||[];total=count||0;
+  window.RPCPHDataCache?.set(cacheKey,{rows:currentRows,total},20000);
   renderRows();
  }catch(error){
-  currentRows=[];total=0;renderRows();
-  showNotice("Could not load the database: "+(error.message||"Supabase request failed")+". Check the Supabase connection and read policy.","warn");
+  if(!cached){currentRows=[];total=0;renderRows();}
+  showNotice(cached?"Showing recently loaded records. Use Refresh to retry the live database request.":"Could not load the database: "+(error.message||"Supabase request failed")+". Check the Supabase connection and read policy.","warn");
  }finally{btn.disabled=false;refresh.disabled=false;}
 }
 function renderRows(){
@@ -233,7 +241,7 @@ function exportPage(){
 }
 function runSearch(){page=0;loadRows();}
 $("searchBtn").addEventListener("click",runSearch);
-$("refreshBtn").addEventListener("click",loadRows);
+$("refreshBtn").addEventListener("click",()=>loadRows(true));
 $("search").addEventListener("keydown",event=>{if(event.key==="Enter")runSearch();});
 $("status").addEventListener("change",runSearch);
 $("sort").addEventListener("change",runSearch);
