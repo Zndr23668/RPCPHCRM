@@ -130,7 +130,7 @@ const SUPABASE_URL="https://pfuomojvcuwbvqtzvglb.supabase.co";
 const SUPABASE_KEY="sb_publishable__W9mPIcJIZ7QDhzbKWNm_g_IsEMgMUt";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const PAGE_SIZE=25;
-let page=0,total=0,currentRows=[];
+let page=0,total=0,currentRows=[],searchTimer=null;
 const $=id=>document.getElementById(id);
 function esc(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));}
 function showNotice(message,type="info"){const el=$("notice");el.textContent=message;el.className="notice show "+type;}
@@ -161,8 +161,10 @@ async function loadRows(force=false){
  if(cached){
   currentRows=cached.rows||[];total=Number(cached.total)||0;
   renderRows();
- }else{
+ }else if(!currentRows.length){
   $("rows").innerHTML='<tr><td colspan="9" class="empty">Loading records…</td></tr>';
+ }else{
+  $("resultLabel").textContent="Updating results…";
  }
  hideNotice();
  try{
@@ -172,8 +174,8 @@ async function loadRows(force=false){
   window.RPCPHDataCache?.set(cacheKey,{rows:currentRows,total},20000);
   renderRows();
  }catch(error){
-  if(!cached){currentRows=[];total=0;renderRows();}
-  showNotice(cached?"Showing recently loaded records. Use Refresh to retry the live database request.":"Could not load the database: "+(error.message||"Supabase request failed")+". Check the Supabase connection and read policy.","warn");
+  if(!cached)renderRows();
+  showNotice(cached||currentRows.length?"The live search could not refresh. Previously loaded results are still shown.":"Could not load the database: "+(error.message||"Supabase request failed")+". Check the Supabase connection and read policy.","warn");
  }finally{btn.disabled=false;refresh.disabled=false;}
 }
 function renderRows(){
@@ -239,9 +241,10 @@ function exportPage(){
  const blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
  const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="RPCPH-database-page-"+(page+1)+".csv";a.click();URL.revokeObjectURL(url);
 }
-function runSearch(){page=0;loadRows();}
+function runSearch(){clearTimeout(searchTimer);searchTimer=null;page=0;loadRows();}
 $("searchBtn").addEventListener("click",runSearch);
 $("refreshBtn").addEventListener("click",()=>loadRows(true));
+$("search").addEventListener("input",()=>{clearTimeout(searchTimer);searchTimer=setTimeout(runSearch,320);});
 $("search").addEventListener("keydown",event=>{if(event.key==="Enter")runSearch();});
 $("status").addEventListener("change",runSearch);
 $("sort").addEventListener("change",runSearch);
