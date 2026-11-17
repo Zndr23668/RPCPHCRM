@@ -140,11 +140,11 @@ function render(){
  $("pagerInfo").textContent="Showing "+(allAgents.length?start+1:0)+"–"+Math.min(start+PAGE_SIZE,allAgents.length)+" of "+allAgents.length;
  $("prevBtn").disabled=page===0;$("nextBtn").disabled=(page+1)*PAGE_SIZE>=allAgents.length;
 }
-async function loadAgents(){
+async function loadAgents(force=false){
  $("refreshBtn").disabled=true;$("searchBtn").disabled=true;
  $("agentGrid").innerHTML='<div class="empty">Loading agent directory…</div>';$("notice").className="notice";
  try{
-  const result=await RPCPHAuth.api("agent_profiles",{search:$("search").value.trim(),status:$("status").value,sort:$("sort").value});
+  const result=await RPCPHAuth.api("agent_profiles",{search:$("search").value.trim(),status:$("status").value,sort:$("sort").value},{fresh:force});
   allAgents=result.agents||[];page=0;render();
  }catch(e){allAgents=[];render();notify(e.message||"Could not load agents.","warn");}
  finally{$("refreshBtn").disabled=false;$("searchBtn").disabled=false;}
@@ -181,7 +181,7 @@ async function saveProfile(){
  }catch(e){$("editStatus").className="notice show warn";$("editStatus").textContent=e.message||"Could not save profile.";}
  finally{btn.disabled=false;}
 }
-$("searchBtn").addEventListener("click",loadAgents);$("refreshBtn").addEventListener("click",loadAgents);
+$("searchBtn").addEventListener("click",loadAgents);$("refreshBtn").addEventListener("click",()=>loadAgents(true));
 $("search").addEventListener("keydown",e=>{if(e.key==="Enter")loadAgents();});
 $("status").addEventListener("change",loadAgents);$("sort").addEventListener("change",loadAgents);
 $("prevBtn").addEventListener("click",()=>{if(page>0){page--;render();}});
