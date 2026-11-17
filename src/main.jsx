@@ -197,7 +197,9 @@ function LegacyPage({route}){
      if(src.endsWith("/crm-motion.js"))window.RPCPHMotionRefresh?.(root);
     }else if(source.textContent?.trim()){
      const script=document.createElement("script");
-     script.textContent=source.textContent;
+     // A fresh function scope keeps each legacy page's const/let declarations
+     // from colliding with scripts from pages visited earlier in this SPA session.
+     script.textContent="(()=>{\\n"+source.textContent+"\\n})();";
      document.body.appendChild(script);
      addedScripts.push(script);
     }
@@ -214,6 +216,10 @@ function LegacyPage({route}){
   return ()=>{
    disposed=true;
    addedScripts.forEach(script=>script.remove());
+   // These are intentionally exported by individual legacy pages for their
+   // generated controls; remove them when their owning page is unmounted.
+   if(route==="roulette")delete window.loadRouletteAdmin;
+   if(route==="users"){delete window.toggleUser;delete window.resetUserKey;}
    addedStyles.forEach(style=>style.remove());
    addedLinks.forEach(link=>link.remove());
    document.documentElement.classList.remove("auth-pending");
