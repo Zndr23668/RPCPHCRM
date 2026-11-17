@@ -13,7 +13,8 @@ html.auth-pending body{visibility:hidden}
 const $=id=>document.getElementById(id);let currentUser=null,users=[];
 function notice(id,msg,ok){$(id).textContent=msg;$(id).className="notice show "+(ok?"good":"bad")}
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function pretty(v){return v?new Date(v).toLocaleString():"Never"}\nfunction roleLabel(role){return ({user:"User",employee:"User",admin:"Admin",superadmin:"Super Admin"})[role]||role}
+function pretty(v){return v?new Date(v).toLocaleString():"Never"}
+function roleLabel(role){return ({user:"User",employee:"User",admin:"Admin",superadmin:"Super Admin"})[role]||role}
 async function loadUsers(){const r=await RPCPHAuth.api("list_users");users=r.users||[];renderUsers()}
 function renderUsers(){$("usersBody").innerHTML=users.map(u=>'<tr><td><strong>'+esc(u.display_name)+'</strong></td><td>'+esc(roleLabel(u.role))+'</td><td>'+esc(u.assigned_agent_id?u.assigned_agent_id.slice(0,8)+"…":"—")+'</td><td><span class="pill '+(u.is_active?"":"off")+'">'+(u.is_active?"Active":"Disabled")+'</span></td><td>'+esc(pretty(u.last_login_at))+'</td><td><div class="actions"><button class="btn secondary" onclick="toggleUser(\''+u.id+'\','+(!u.is_active)+')">'+(u.is_active?"Disable":"Enable")+'</button><button class="btn secondary" onclick="resetUserKey(\''+u.id+'\')">Reset key</button></div></td></tr>').join("")||'<tr><td colspan="6" class="empty">No accounts found.</td></tr>'}
 window.toggleUser=async(id,is_active)=>{if(!confirm(is_active?"Enable this account?":"Disable this account and end its active sessions?"))return;try{await RPCPHAuth.api("set_active",{user_id:id,is_active});await loadUsers()}catch(e){alert(e.message)}};
