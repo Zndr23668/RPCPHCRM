@@ -206,14 +206,15 @@ function Sidebar({user,active,onLogout}){
    {item("leads","Lead Listings","/Leads/","leads")}
    {isAdmin&&item("roulette","Roulette Settings","/Roulette/","roulette")}
    <div className="crm-nav-divider"/>
-   <div className="crm-nav-caption">DIRECTORY</div>
-   <button className={"crm-nav-group-toggle "+(["agents","areas"].includes(active)?"has-active":"")} type="button" onClick={()=>toggle("directory")} aria-expanded={expanded.directory} aria-controls="crm-directory-subnav" title="Directory">
-    <NavIcon name="agents"/><span>Directory</span><NavIcon name="chevron"/>
-   </button>
-   {expanded.directory&&<div className="crm-nav-subnav" id="crm-directory-subnav">
-    {item("agents","Agent Profiles","/Agents/","agents")}
-    {isAdmin&&item("areas","Area Manager","/Areas/","areas")}
-   </div>}
+   {isAdmin?<><div className="crm-nav-caption">DIRECTORY</div>
+    <button className={"crm-nav-group-toggle "+(["agents","areas"].includes(active)?"has-active":"")} type="button" onClick={()=>toggle("directory")} aria-expanded={expanded.directory} aria-controls="crm-directory-subnav" title="Directory">
+     <NavIcon name="agents"/><span>Directory</span><NavIcon name="chevron"/>
+    </button>
+    {expanded.directory&&<div className="crm-nav-subnav" id="crm-directory-subnav">
+     {item("agents","Agent Profiles","/Agents/","agents")}
+     {item("areas","Area Manager","/Areas/","areas")}
+    </div>}
+   </>:item("agents","Agent Profiles","/Agents/","agents")}
    {isAdmin&&<>
     <div className="crm-nav-divider"/>
     <div className="crm-nav-caption">ADMINISTRATION</div>
@@ -319,7 +320,7 @@ function Dashboard({user,onLogout}){
     <div className="workspace-heading"><div className="workspace-company-lockup" aria-label="Remote Professionals and Coldwell Banker">
       <img className="brand-lockup-image" src="/rp-coldwell-logo-lockup.png" alt="Remote Professionals and Coldwell Banker"/>
      </div><h2>Workspace</h2></div>
-    <div className="workspace-tools"><div className="user"><span>{user?.display_name||"CRM User"} · {user?.role||"employee"}</span></div></div>\n   </header>
+    <div className="workspace-tools"><div className="user"><span>{user?.display_name||"CRM User"} · {roleLabel}</span></div></div>\n   </header>
    <section className="hero"><div><h1>Find the right agent</h1></div><div className="hero-mark">R</div></section>
    <section className="metrics">{metrics.map((m,i)=><motion.div className="metric" key={m.l} initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{...spring,delay:.08+i*.06}}><strong>{m.n}</strong><span>{m.l}</span><small>{m.detail}</small></motion.div>)}</section>
    <motion.form className="lead-card" onSubmit={submit} layout transition={spring}>
